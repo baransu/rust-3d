@@ -1,0 +1,10 @@
+[package]
+name = "rust-3d"
+version = "0.1.0"
+authors = ["Baransu <sajgonek123@gmail.com>"]
+
+[dependencies]
+gl = "*"
+glutin = "*"
+# cgmath = "0.7.0"
+nalgebra = "0.6.0"
