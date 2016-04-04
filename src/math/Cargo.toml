@@ -1,0 +1,10 @@
+[package]
+name = "math"
+version = "0.1.0"
+authors = ["Baransu <sajgonek123@gmail.com>"]
+
+[lib]
+name = "math"
+path = "lib.rs"
+
+[dependencies]

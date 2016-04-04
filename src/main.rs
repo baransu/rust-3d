@@ -1,6 +1,9 @@
 extern crate gl;
 extern crate glutin;
-// extern crate nalgebra as na;
+extern crate nalgebra as na;
+extern crate time;
+
+extern crate math;
 
 use gl::types::*;
 use std::mem;
@@ -11,24 +14,84 @@ use glutin::*;
 
 use std::ffi::CString;
 // use na::*;
-// use na;
+
+use math::mat4::Mat4;
+use math::vec3::Vec3;
 
 // Vertex data
-static VERTEX_DATA: [GLfloat; 6] = [
-     0.0,  0.5,
-     0.5, -0.5,
-    -0.5, -0.5
+// static VERTEX_DATA: [GLfloat; 9] = [
+//      0.0,  0.5, -0.5,
+//      0.5, -0.5, -0.5,
+//     -0.5, -0.5, -0.5
+// ];
+
+// static VERTEX_DATA: [GLfloat; 18] = [
+//     // left triangle
+//     -0.5, -0.5, -1.0,
+//     -0.5,  0.5, -1.0,
+//      0.5, -0.5, -1.0,
+//
+//      //right trangle
+//      -0.5,  0.5, -1.0,
+//       0.5, -0.5, -1.0,
+//       0.5,  0.5, -1.0
+//
+// ];
+
+static VERTEX_DATA: [GLfloat; 108] = [
+    -0.5, -0.5, -0.5,
+    0.5, -0.5, -0.5,
+    0.5,  0.5, -0.5,
+    0.5,  0.5, -0.5,
+    -0.5,  0.5, -0.5,
+    -0.5, -0.5, -0.5,
+
+    -0.5, -0.5,  0.5,
+    0.5, -0.5,  0.5,
+    0.5,  0.5,  0.5,
+    0.5,  0.5,  0.5,
+    -0.5,  0.5,  0.5,
+    -0.5, -0.5,  0.5,
+
+    -0.5,  0.5,  0.5,
+    -0.5,  0.5, -0.5,
+    -0.5, -0.5, -0.5,
+    -0.5, -0.5, -0.5,
+    -0.5, -0.5,  0.5,
+    -0.5,  0.5,  0.5,
+
+    0.5,  0.5,  0.5,
+    0.5,  0.5, -0.5,
+    0.5, -0.5, -0.5,
+    0.5, -0.5, -0.5,
+    0.5, -0.5,  0.5,
+    0.5,  0.5,  0.5,
+
+    -0.5, -0.5, -0.5,
+    0.5, -0.5, -0.5,
+    0.5, -0.5,  0.5,
+    0.5, -0.5,  0.5,
+    -0.5, -0.5,  0.5,
+    -0.5, -0.5, -0.5,
+
+    -0.5,  0.5, -0.5,
+    0.5,  0.5, -0.5,
+    0.5,  0.5,  0.5,
+    0.5,  0.5,  0.5,
+    -0.5,  0.5,  0.5,
+    -0.5,  0.5, -0.5,
+
 ];
 
 // Shader sources
 static VS_SRC: &'static str =
    "#version 330 core\n\
-    layout (location = 0) in vec2 position;\n\
-    // uniform mat4 model;\n\
-    // uniform mat4 view;\n\
+    layout (location = 0) in vec3 position;\n\
+    uniform mat4 model;\n\
+    uniform mat4 view;\n\
     uniform mat4 projection;\n\
     void main() {\n\
-        gl_Position = vec4(position, 0.0, 1.0);\n\
+        gl_Position = model * view * projection * vec4(position, 1.0);\n\
     }";
 
 static FS_SRC: &'static str =
@@ -37,6 +100,143 @@ static FS_SRC: &'static str =
     void main() {\n\
         color = vec4(1.0, 0.0, 0.0, 1.0);\n\
     }";
+
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 600;
+
+fn main() {
+
+    let window = WindowBuilder::new()
+        .with_title("rust-3d".to_string())
+        .with_dimensions(WIDTH, HEIGHT)
+        .with_vsync()
+        .with_gl(GlRequest::Specific(Api::OpenGl, (3 as u8, 3 as u8)))
+        .build()
+        .unwrap();
+
+    // It is essential to make the context current before calling `gl::load_with`.
+    unsafe { window.make_current() }.unwrap();
+
+    // Load the OpenGL function pointers
+    // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
+    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
+
+    // Create GLSL shaders
+    let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
+    let fs = compile_shader(FS_SRC, gl::FRAGMENT_SHADER);
+    let program = link_program(vs, fs);
+
+    let mut vao = 0;
+    let mut vbo = 0;
+
+    // custom matrix tests
+    // let mat = Mat4x4::new_identity();
+    // println!("{:?}", mat);
+
+    unsafe {
+        // Create Vertex Array Object
+        gl::GenVertexArrays(1, &mut vao);
+        gl::BindVertexArray(vao);
+
+        // Create a Vertex Buffer Object and copy the vertex data to it
+        gl::GenBuffers(1, &mut vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        gl::BufferData(gl::ARRAY_BUFFER, (VERTEX_DATA.len() * mem::size_of::<GLfloat>()) as GLsizeiptr, mem::transmute(&VERTEX_DATA[0]), gl::STATIC_DRAW);
+
+        // Use shader program
+        gl::UseProgram(program);
+
+        // Specify the layout of the vertex data
+        // let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
+        gl::EnableVertexAttribArray(0);
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, 0, ptr::null());
+
+
+        // gl::Enable(gl::DEPTH_TEST);
+    }
+
+    let mut time = 0.0;
+    'running: loop {
+
+        time += 0.33;
+        let ts = time::get_time();
+        // println!("{:?}", ts.sec as f64);
+        let angle: f64 = ts.sec as f64 + ts.nsec as f64/1000000000.0;
+        // println!("{:?}", time);
+
+        unsafe {
+            // Clear the screen to black
+            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+
+            // near - as big as posible (0.1)
+            // far - as small as posible (100 - far and small enought)
+            let perspective_matrix = Mat4::new_perspective(77.0, (WIDTH/HEIGHT) as f32, 0.1, 100.0);
+            // println!("{:?}", perspective_matrix);
+
+            // opengl forward is -z;
+            let object_pos = Vec3::new(0.0, 0.0, -1.0);
+
+            // REMEMBER = proj * view * model with glm matrices(col or row) else model * view * proj
+            let view_matrix = Mat4::new_look_at(&Vec3::new(0.0, 0.0, 6.0), &object_pos, &Vec3::new(0.0, 1.0, 0.0));
+            // println!("{:?}", view_matrix);
+            // panic!("asdasdasd!!!");
+            // let view_matrix = Mat4::new_identity();
+
+            let mut model_matrix = Mat4::new_identity();
+            model_matrix.translate(&object_pos);
+            model_matrix.rotate(time as f32, &Vec3::new(0.0, 1.0, 1.0));
+            model_matrix.scale(&Vec3::new(angle.sin() as f32, angle.cos() as f32, 1.0));
+
+
+            // println!("{:?}", model_matrix);
+            // translate(&model_matrix, Vec3::new(6.0, 0.0, 0.0));
+            // model_matrix.transformation(Vec3::new(-6.0, 0.0, 0.0));
+
+            // uniform matrixes
+            let projection_location = gl::GetUniformLocation(program, CString::new("projection").unwrap().as_ptr());
+            let model_location = gl::GetUniformLocation(program, CString::new("model").unwrap().as_ptr());
+            let view_location = gl::GetUniformLocation(program, CString::new("view").unwrap().as_ptr());
+
+            gl::UniformMatrix4fv(projection_location, 1, gl::FALSE, perspective_matrix.as_ptr());
+            gl::UniformMatrix4fv(model_location, 1, gl::FALSE, model_matrix.as_ptr());
+            gl::UniformMatrix4fv(view_location, 1, gl::FALSE, view_matrix.as_ptr());
+
+            // Draw a triangle from the 3 vertices
+            gl::DrawArrays(gl::TRIANGLES, 0, 36);
+        }
+
+
+        window.swap_buffers().unwrap();
+
+        for event in window.poll_events() {
+            match event {
+                Event::Closed => break'running,
+                // Event::Resized(x, y) => {
+                //     match window.get_inner_size_points() {
+                //         Some(size) => {
+                //             let (x, y) = size;
+                //             println!("Inner window sieze: {}x{}", x, y);
+                //         },
+                //         None => println!("get_inner_size_points failed"),
+                //     };
+                //     println!("Window resized to: {}x{}", x, y)
+                // },
+                _ => (),
+            }
+        }
+
+    }
+
+    // Cleanup - OpenGL memory dealocation
+    unsafe {
+        gl::DeleteProgram(program);
+        gl::DeleteShader(fs);
+        gl::DeleteShader(vs);
+        gl::DeleteBuffers(1, &vbo);
+        gl::DeleteVertexArrays(1, &vao);
+    }
+}
 
 fn compile_shader(src: &str, ty: GLenum) -> GLuint {
     unsafe {
@@ -86,107 +286,5 @@ fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
             panic!("{}", str::from_utf8(&buf).ok().expect("ProgramInfoLog not valid utf8"));
         }
         program
-    }
-}
-
-fn main() {
-
-    let window = Window::new().unwrap();
-
-    // title resolution and stuff
-    window.set_title("rust-3d");
-    window.set_inner_size(640, 480);
-
-    // It is essential to make the context current before calling `gl::load_with`.
-    unsafe { window.make_current() }.unwrap();
-
-    // Load the OpenGL function pointers
-    // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
-    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
-
-    // Create GLSL shaders
-    let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
-    let fs = compile_shader(FS_SRC, gl::FRAGMENT_SHADER);
-    let program = link_program(vs, fs);
-
-    let mut vao = 0;
-    let mut vbo = 0;
-
-    unsafe {
-        // Create Vertex Array Object
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-
-        // Create a Vertex Buffer Object and copy the vertex data to it
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, (VERTEX_DATA.len() * mem::size_of::<GLfloat>()) as GLsizeiptr, mem::transmute(&VERTEX_DATA[0]), gl::STATIC_DRAW);
-
-        // Use shader program
-        gl::UseProgram(program);
-
-        // Specify the layout of the vertex data
-        // let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
-        gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE as GLboolean, 0, ptr::null());
-    }
-
-    'running: loop {
-        for event in window.wait_events() {
-
-            unsafe {
-                // Clear the screen to black
-                gl::ClearColor(1.0, 0.0, 1.0, 1.0);
-                gl::Clear(gl::COLOR_BUFFER_BIT);
-
-
-                // let perspective_matrix: Persp3<GLfloat> = Persp3::new(1280.0/720.0, 60.0, 0.0, 100.0);
-                // let model_matrix: Mat4<GLfloat> = Mat4::new_identity(1);
-                // translate(&model_matrix, Vec3::new(6.0, 0.0, 0.0));
-                // model_matrix.transformation(Vec3::new(-6.0, 0.0, 0.0));
-
-                // uniform matrixes
-                // let projection_location = gl::GetUniformLocation(program, CString::new("projection").unwrap().as_ptr());
-                // // let model_location = gl::GetUniformLocation(program, CString::new("model").unwrap().as_ptr());
-                // // let view_location = gl::GetUniformLocation(program, CString::new("view").unwrap().as_ptr());
-                //
-                // let left = 0.0;
-                // let right = 640.0;
-                // let top = 0.0;
-                // let bottom = 480.0;
-                // let near = 0.0;
-                // let far = 100.0;
-                //
-                // let pm: [GLfloat; 16] = [
-                // 2.0/(right - left), 0.0,                0.0,                (left + right)/(left - right),
-                // 0.0,                2.0/(top - bottom), 0.0,                (bottom + top)/(bottom - top),
-                // 0.0,                0.0,                2.0/(near - far),   (far + near)/(far - near),
-                // 0.0,                0.0,                0.0,                1.0,
-                // ];
-                //
-                // println!("{:?}", pm);
-                //
-                // gl::UniformMatrix4fv(projection_location, 1, gl::FALSE, &pm[0]);
-
-                // Draw a triangle from the 3 vertices
-                gl::DrawArrays(gl::TRIANGLES, 0, 3);
-            }
-
-            window.swap_buffers().unwrap();
-
-            match event {
-                glutin::Event::Closed => break'running,
-                _ => (),
-            }
-        }
-    }
-
-    // Cleanup - OpenGL memory dealocation
-    unsafe {
-        gl::DeleteProgram(program);
-        gl::DeleteShader(fs);
-        gl::DeleteShader(vs);
-        gl::DeleteBuffers(1, &vbo);
-        gl::DeleteVertexArrays(1, &vao);
     }
 }
