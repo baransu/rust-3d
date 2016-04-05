@@ -57,7 +57,7 @@ impl Mat4 {
     }
 
     /// multiply by other mat4
-    pub fn multiply(&mut self, other: &Mat4) -> Mat4 {
+    pub fn multiply(&self, other: &Mat4) -> Mat4 {
 
         let mut data: [f32; 16] = [0.0; 16];
 
@@ -74,14 +74,20 @@ impl Mat4 {
         Mat4 {elements: data }
     }
 
-    pub fn translate(&mut self, translation: &Vec3){
-        self.elements[3 + 0 * 4] = translation.x;
-        self.elements[3 + 1 * 4] = translation.y;
-        self.elements[3 + 2 * 4] = translation.z;
+    pub fn translate(translation: &Vec3) -> Mat4 {
+        let mut mat = Mat4::new_identity();
+
+        // col + row * 4
+        mat.elements[3 + 0 * 4] = translation.x;
+        mat.elements[3 + 1 * 4] = translation.y;
+        mat.elements[3 + 2 * 4] = translation.z;
+
+        // mat
+        Mat4 { elements: mat.elements }
     }
 
-    pub fn rotate(&mut self, angle: f32, axis: &Vec3) {
-        // let mut mat = Mat4::new_identity();
+    pub fn rotate(angle: f32, axis: &Vec3) -> Mat4{
+        let mut mat = Mat4::new_identity();
 
         let r = angle.to_radians();
         let c = r.cos();
@@ -93,45 +99,47 @@ impl Mat4 {
         let z = axis.z;
 
         // col + row * 4
-        self.elements[0 + 0 * 4] = x * omc + c;
-        self.elements[0 + 1 * 4] = y * x * omc + z * s;
-        self.elements[0 + 2 * 4] = x * z * omc - y * s;
+        mat.elements[0 + 0 * 4] = x * omc + c;
+        mat.elements[0 + 1 * 4] = y * x * omc + z * s;
+        mat.elements[0 + 2 * 4] = x * z * omc - y * s;
 
-        self.elements[1 + 0 * 4] = x * y * omc - z * s;
-        self.elements[1 + 1 * 4] = y * omc + c;
-        self.elements[1 + 2 * 4] = y * z * omc + x * s;
+        mat.elements[1 + 0 * 4] = x * y * omc - z * s;
+        mat.elements[1 + 1 * 4] = y * omc + c;
+        mat.elements[1 + 2 * 4] = y * z * omc + x * s;
 
-        self.elements[2 + 0 * 4] = x * z * omc + y * s;
-        self.elements[2 + 1 * 4] = y * z * omc - x * s;
-        self.elements[2 + 2 * 4] = z * omc + c;
+        mat.elements[2 + 0 * 4] = x * z * omc + y * s;
+        mat.elements[2 + 1 * 4] = y * z * omc - x * s;
+        mat.elements[2 + 2 * 4] = z * omc + c;
 
+        mat
     }
 
-    pub fn scale(&mut self, scale: &Vec3) {
-        // let mut mat = Mat4::new_identity();
+    pub fn scale(scale: &Vec3) -> Mat4 {
+        let mut mat = Mat4::new_identity();
 
-        self.elements[0 + 0 * 4] = scale.x;
-        self.elements[1 + 1 * 4] = scale.y;
-        self.elements[2 + 2 * 4] = scale.z;
+        mat.elements[0 + 0 * 4] = scale.x;
+        mat.elements[1 + 1 * 4] = scale.y;
+        mat.elements[2 + 2 * 4] = scale.z;
 
-        // mat
+        mat
     }
 
     pub fn new_look_at(camera: &Vec3, object: &Vec3, up: &Vec3) -> Mat4 {
         let mut mat = Mat4::new_identity();
 
-        let f = object.sub(camera).normalize();
-        // println!("{:?}", f);
+        let f = object.sub(camera);
+        let f = f.normalize();
+
         // f.sub(camera);
         // f.normalize();
 
         let s = f.cross(&up.normalize());
-        // println!("{:?}", s);
+
         // up.normalize();
         // s.cross(up);
 
         let u = s.cross(&f);
-        // println!("{:?}", u);
+
         // u.cross(&f);
 
         mat.elements[0 + 0 * 4] = s.x;
@@ -146,8 +154,7 @@ impl Mat4 {
         mat.elements[2 + 1 * 4] = -f.y;
         mat.elements[2 + 2 * 4] = -f.z;
 
-        let mut m = Mat4::new_identity();
-        m.translate(&Vec3::new(-camera.x, -camera.y, -camera.z));
+        let m = Mat4::translate(&Vec3::new(-camera.x, -camera.y, -camera.z));
         m.multiply(&mat)
     }
 

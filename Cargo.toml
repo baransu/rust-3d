@@ -10,7 +10,8 @@ name = "rust-3d"
 path = "src/math"
 
 [dependencies]
-gl = "*"
-glutin = "*"
-nalgebra = "0.6.0"
+gl = "0.6.0"
+glutin = "0.4.9"
 time = "0.1.35"
+cgmath = "0.7.0"
+# image = "0.8.0"

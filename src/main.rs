@@ -1,9 +1,11 @@
 extern crate gl;
 extern crate glutin;
-extern crate nalgebra as na;
 extern crate time;
+// extern crate image;
 
-extern crate math;
+extern crate cgmath;
+
+// extern crate math;
 
 use gl::types::*;
 use std::mem;
@@ -12,105 +14,130 @@ use std::str;
 
 use glutin::*;
 
+use cgmath::*;
+
 use std::ffi::CString;
-// use na::*;
 
-use math::mat4::Mat4;
-use math::vec3::Vec3;
+use std::fs::File;
 
-// Vertex data
-// static VERTEX_DATA: [GLfloat; 9] = [
-//      0.0,  0.5, -0.5,
-//      0.5, -0.5, -0.5,
-//     -0.5, -0.5, -0.5
-// ];
+// use math::mat4::Mat4;
+// use math::vec3::Vec3;
 
-// static VERTEX_DATA: [GLfloat; 18] = [
-//     // left triangle
-//     -0.5, -0.5, -1.0,
-//     -0.5,  0.5, -1.0,
-//      0.5, -0.5, -1.0,
-//
-//      //right trangle
-//      -0.5,  0.5, -1.0,
-//       0.5, -0.5, -1.0,
-//       0.5,  0.5, -1.0
-//
-// ];
+static VERTEX_DATA: [GLfloat; 8 * 36] = [
+                                //color
+    -0.5, -0.5, -0.5,  0.0, 0.0, 1.0, 0.0, 0.0,
+    0.5, -0.5, -0.5,  1.0, 0.0, 1.0, 0.0, 0.0,
+    0.5,  0.5, -0.5,  1.0, 1.0, 1.0, 0.0, 0.0,
+    0.5,  0.5, -0.5,  1.0, 1.0, 1.0, 0.0, 0.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0, 1.0, 0.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 0.0, 1.0, 0.0, 0.0,
 
-static VERTEX_DATA: [GLfloat; 108] = [
-    -0.5, -0.5, -0.5,
-    0.5, -0.5, -0.5,
-    0.5,  0.5, -0.5,
-    0.5,  0.5, -0.5,
-    -0.5,  0.5, -0.5,
-    -0.5, -0.5, -0.5,
+    -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0, 0.0,
+    0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 1.0, 0.0,
+    0.5,  0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 0.0,
+    0.5,  0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 0.0,
+    -0.5,  0.5,  0.5,  0.0, 1.0, 1.0, 1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0, 0.0,
 
-    -0.5, -0.5,  0.5,
-    0.5, -0.5,  0.5,
-    0.5,  0.5,  0.5,
-    0.5,  0.5,  0.5,
-    -0.5,  0.5,  0.5,
-    -0.5, -0.5,  0.5,
+    -0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 0.0,
+    -0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 1.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0, 0.0, 1.0, 0.0,
+    -0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 0.0,
 
-    -0.5,  0.5,  0.5,
-    -0.5,  0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    -0.5, -0.5,  0.5,
-    -0.5,  0.5,  0.5,
+    0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 1.0,
+    0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 1.0, 1.0,
+    0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 1.0,
+    0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 1.0,
+    0.5, -0.5,  0.5,  0.0, 0.0, 0.0, 1.0, 1.0,
+    0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 1.0,
 
-    0.5,  0.5,  0.5,
-    0.5,  0.5, -0.5,
-    0.5, -0.5, -0.5,
-    0.5, -0.5, -0.5,
-    0.5, -0.5,  0.5,
-    0.5,  0.5,  0.5,
+    -0.5, -0.5, -0.5,  0.0, 1.0, 1.0, 0.0, 1.0,
+    0.5, -0.5, -0.5,  1.0, 1.0, 1.0, 0.0, 1.0,
+    0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 0.0, 1.0,
+    0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0, 1.0, 0.0, 1.0,
 
-    -0.5, -0.5, -0.5,
-    0.5, -0.5, -0.5,
-    0.5, -0.5,  0.5,
-    0.5, -0.5,  0.5,
-    -0.5, -0.5,  0.5,
-    -0.5, -0.5, -0.5,
-
-    -0.5,  0.5, -0.5,
-    0.5,  0.5, -0.5,
-    0.5,  0.5,  0.5,
-    0.5,  0.5,  0.5,
-    -0.5,  0.5,  0.5,
-    -0.5,  0.5, -0.5,
+    -0.5,  0.5, -0.5,  0.0, 1.0, 0.0, 0.0, 1.0,
+    0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 0.0, 1.0,
+    0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 0.0, 1.0,
+    0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 0.0, 1.0,
+    -0.5,  0.5,  0.5,  0.0, 0.0, 0.0, 0.0, 1.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0, 0.0, 0.0, 1.0
 
 ];
+
+// static VERTEX_DATA: [f32; 5 * 4] = [
+//    // Positions          // Texture Coords
+//     0.5,  0.5, 0.0,   1.0, 1.0, // Top Right
+//     0.5, -0.5, 0.0,   1.0, 0.0, // Bottom Right
+//    -0.5, -0.5, 0.0,   0.0, 0.0, // Bottom Left
+//    -0.5,  0.5, 0.0,   0.0, 1.0  // Top Left
+// ];
+
+// static INDICES: [i32; 6] = [ // Note that we start from 0!
+//    0, 1, 3, // First Triangle
+//    1, 2, 3  // Second Triangle
+// ];
+
+// static VERTEX_DATA: [f32; 8 * 3]= [
+//     -0.5, -0.5, 0.5,//Bottom Let
+//      0.5, -0.5, 0.5, //Bottom Right
+//      0.5, 0.5, 0.5,  //Top Right
+//     -0.5, 0.5, 0.5, //Top let
+//
+//     -0.5, -0.5, -0.5,//Bottom Let
+//      0.5, -0.5, -0.5, //Bottom Right
+//      0.5, 0.5, -0.5,  //Top Right
+//     -0.5, 0.5, -0.5 //Top let
+// ];
+//
+// static INDICES: [u32; 36] = [ // Note that we start from 0!
+//     0,1,2, 0,2,3,//front
+//     0,3,7, 0,7,4,//Left
+//     0,1,5, 0,5,4,//Bottom
+//
+//     6,7,4, 6,4,5,//Back
+//     6,7,3, 6,3,2,//top
+//     6,2,1, 6,1,5//right
+// ];
+
 
 // Shader sources
 static VS_SRC: &'static str =
    "#version 330 core\n\
     layout (location = 0) in vec3 position;\n\
+    layout (location = 1) in vec2 uvs;\n\
+    layout (location = 2) in vec3 color;\n\
     uniform mat4 model;\n\
     uniform mat4 view;\n\
     uniform mat4 projection;\n\
+    out vec3 col;\n\
     void main() {\n\
-        gl_Position = model * view * projection * vec4(position, 1.0);\n\
+        gl_Position = projection * model * vec4(position, 1.0f);\n\
+        col = color;\n\
     }";
 
 static FS_SRC: &'static str =
    "#version 330 core\n\
     out vec4 color;
+    in vec3 col;
     void main() {\n\
-        color = vec4(1.0, 0.0, 0.0, 1.0);\n\
+        color = vec4(col, 1.0);\n\
     }";
 
-const WIDTH: u32 = 800;
-const HEIGHT: u32 = 600;
+const WIDTH: f32 = 1280.0;
+const HEIGHT: f32 = 720.0;
 
 fn main() {
 
     let window = WindowBuilder::new()
         .with_title("rust-3d".to_string())
-        .with_dimensions(WIDTH, HEIGHT)
+        .with_dimensions(WIDTH as u32, HEIGHT as u32)
         .with_vsync()
-        .with_gl(GlRequest::Specific(Api::OpenGl, (3 as u8, 3 as u8)))
+        // .with_gl(GlRequest::Specific(Api::OpenGl, (3 as u8, 3 as u8)))
         .build()
         .unwrap();
 
@@ -128,37 +155,55 @@ fn main() {
 
     let mut vao = 0;
     let mut vbo = 0;
+    // let mut ebo = 0;
 
     // custom matrix tests
     // let mat = Mat4x4::new_identity();
     // println!("{:?}", mat);
 
+    // let texture_img = image::open("resources/groundD.png").expect("Opening image failed");
+
     unsafe {
         // Create Vertex Array Object
         gl::GenVertexArrays(1, &mut vao);
+        gl::GenBuffers(1, &mut vbo);
+        // gl::GenBuffers(1, &mut ebo);
+
         gl::BindVertexArray(vao);
 
         // Create a Vertex Buffer Object and copy the vertex data to it
-        gl::GenBuffers(1, &mut vbo);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, (VERTEX_DATA.len() * mem::size_of::<GLfloat>()) as GLsizeiptr, mem::transmute(&VERTEX_DATA[0]), gl::STATIC_DRAW);
-
-        // Use shader program
-        gl::UseProgram(program);
+        gl::BufferData(gl::ARRAY_BUFFER, (VERTEX_DATA.len() * mem::size_of::<f32>()) as GLsizeiptr, mem::transmute(&VERTEX_DATA[0]), gl::STATIC_DRAW);
+        //
+        // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+        // gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (INDICES.len() * mem::size_of::<u32>()) as GLsizeiptr, mem::transmute(&INDICES[0]), gl::STATIC_DRAW);
+        //
 
         // Specify the layout of the vertex data
         // let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
         gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, 0, ptr::null());
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, ptr::null());
 
+        gl::EnableVertexAttribArray(1);
+        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(3 * mem::size_of::<GLfloat>()));
 
-        // gl::Enable(gl::DEPTH_TEST);
+        gl::EnableVertexAttribArray(2);
+        gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(5 * mem::size_of::<GLfloat>()));
+
+        gl::BindVertexArray(0);
+
+        gl::Enable(gl::DEPTH_TEST);
+        // gl::Enable(gl::CULL_FACE);
+        // gl::FrontFace(gl::CW);
+        // gl::CullFace(gl::FRONT_AND_BACK);
+        // Use shader program
+        gl::UseProgram(program);
     }
 
     let mut time = 0.0;
     'running: loop {
 
-        time += 0.33;
+        time += 0.16;
         let ts = time::get_time();
         // println!("{:?}", ts.sec as f64);
         let angle: f64 = ts.sec as f64 + ts.nsec as f64/1000000000.0;
@@ -167,43 +212,44 @@ fn main() {
         unsafe {
             // Clear the screen to black
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             // near - as big as posible (0.1)
             // far - as small as posible (100 - far and small enought)
-            let perspective_matrix = Mat4::new_perspective(77.0, (WIDTH/HEIGHT) as f32, 0.1, 100.0);
-            // println!("{:?}", perspective_matrix);
+            // let perspective_matrix = Mat4::new_perspective();
+            let projection_matrix: Matrix4<f32> = perspective(deg(45.0), WIDTH/HEIGHT, 0.1, 100.0);
+            // let projection_matrix: Matrix4<f32> = ortho(-WIDTH/2.0, WIDTH/2.0, -HEIGHT/2.0, HEIGHT/2.0, 0.1, 100.0);
 
             // opengl forward is -z;
-            let object_pos = Vec3::new(0.0, 0.0, -1.0);
+            let object_pos = Vector3::new(0.0, 0.0, -5.0);
 
-            // REMEMBER = proj * view * model with glm matrices(col or row) else model * view * proj
-            let view_matrix = Mat4::new_look_at(&Vec3::new(0.0, 0.0, 6.0), &object_pos, &Vec3::new(0.0, 1.0, 0.0));
-            // println!("{:?}", view_matrix);
-            // panic!("asdasdasd!!!");
-            // let view_matrix = Mat4::new_identity();
+            // let view_matrix = Matrix4::identity();
+            let view_matrix: Matrix4<f32> = Matrix4::look_at(Point3::new(0.0, 0.0, 1.0), Point3::new(object_pos.x, object_pos.y, object_pos.z), Vector3::new(0.0, 1.0, 0.0));
 
-            let mut model_matrix = Mat4::new_identity();
-            model_matrix.translate(&object_pos);
-            model_matrix.rotate(time as f32, &Vec3::new(0.0, 1.0, 1.0));
-            model_matrix.scale(&Vec3::new(angle.sin() as f32, angle.cos() as f32, 1.0));
+            // let translation = Matrix4::identity();
+            let translation: Matrix4<f32> = Matrix4::from_translation(object_pos);
+            let quat: Quaternion<f32> = Rotation3::from_axis_angle(Vector3::new(0.5, 1.0, 0.0), rad(time/10.0 as f32));
+            let rot: Matrix4<f32> = Matrix4::from(quat);
+            // let scale: Matrix4<f32> = Matrix4::from_scale((angle/10.0).sin() as f32);
 
+            let model_matrix = translation * rot;
 
-            // println!("{:?}", model_matrix);
-            // translate(&model_matrix, Vec3::new(6.0, 0.0, 0.0));
-            // model_matrix.transformation(Vec3::new(-6.0, 0.0, 0.0));
+            println!("{:?}", model_matrix);
 
             // uniform matrixes
             let projection_location = gl::GetUniformLocation(program, CString::new("projection").unwrap().as_ptr());
             let model_location = gl::GetUniformLocation(program, CString::new("model").unwrap().as_ptr());
             let view_location = gl::GetUniformLocation(program, CString::new("view").unwrap().as_ptr());
 
-            gl::UniformMatrix4fv(projection_location, 1, gl::FALSE, perspective_matrix.as_ptr());
-            gl::UniformMatrix4fv(model_location, 1, gl::FALSE, model_matrix.as_ptr());
+            gl::UniformMatrix4fv(projection_location, 1, gl::FALSE, projection_matrix.as_ptr());
+            gl::UniformMatrix4fv(model_location, 1, gl::FALSE, (model_matrix as Matrix4<f32>).as_ptr());
             gl::UniformMatrix4fv(view_location, 1, gl::FALSE, view_matrix.as_ptr());
 
-            // Draw a triangle from the 3 vertices
+            gl::BindVertexArray(vao);
+            // gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
             gl::DrawArrays(gl::TRIANGLES, 0, 36);
+            gl::BindVertexArray(0);
+            // // Draw a triangle from the 3 vertices
         }
 
 
@@ -212,16 +258,6 @@ fn main() {
         for event in window.poll_events() {
             match event {
                 Event::Closed => break'running,
-                // Event::Resized(x, y) => {
-                //     match window.get_inner_size_points() {
-                //         Some(size) => {
-                //             let (x, y) = size;
-                //             println!("Inner window sieze: {}x{}", x, y);
-                //         },
-                //         None => println!("get_inner_size_points failed"),
-                //     };
-                //     println!("Window resized to: {}x{}", x, y)
-                // },
                 _ => (),
             }
         }

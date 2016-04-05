@@ -77,11 +77,13 @@ impl Vec3 {
 
     pub fn normalize(&self) -> Vec3 {
         let len = self.len();
-        let x = self.x / len;
-        let y = self.y / len;
-        let z = self.z / len;
-
-        Vec3 { x: x, y: y, z: z }
+        if len != 0.0 {
+            let x = self.x / len;
+            let y = self.y / len;
+            let z = self.z / len;
+            return Vec3 { x: x, y: y, z: z };
+        }
+        Vec3 { x: 0.0, y: 0.0, z: 0.0 }
     }
 
 }
