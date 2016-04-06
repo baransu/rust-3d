@@ -228,13 +228,14 @@ fn main() {
 
             // let translation = Matrix4::identity();
             let translation: Matrix4<f32> = Matrix4::from_translation(object_pos);
-            let quat: Quaternion<f32> = Rotation3::from_axis_angle(Vector3::new(0.5, 1.0, 0.0), rad(time/10.0 as f32));
-            let rot: Matrix4<f32> = Matrix4::from(quat);
+            let t: f32 = time/10.0;
+            let quat: Quaternion<f32> = Rotation3::from_euler(rad(0.5 * t), rad(1.0 * t), rad(0.0));
+            let rotation: Matrix4<f32> = Matrix4::from(quat);
             // let scale: Matrix4<f32> = Matrix4::from_scale((angle/10.0).sin() as f32);
 
-            let model_matrix = translation * rot;
+            let model_matrix = translation * rotation;
 
-            println!("{:?}", model_matrix);
+            // println!("{:?}", model_matrix);
 
             // uniform matrixes
             let projection_location = gl::GetUniformLocation(program, CString::new("projection").unwrap().as_ptr());
