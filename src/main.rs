@@ -1,7 +1,7 @@
 extern crate gl;
 extern crate glutin;
 extern crate time;
-// extern crate image;
+extern crate image;
 
 extern crate cgmath;
 
@@ -115,29 +115,38 @@ static VS_SRC: &'static str =
     uniform mat4 view;\n\
     uniform mat4 projection;\n\
     out vec3 col;\n\
+    out vec2 texCoords;\n\
     void main() {\n\
         gl_Position = projection * model * vec4(position, 1.0f);\n\
         col = color;\n\
+        texCoords = uvs;\n\
     }";
 
 static FS_SRC: &'static str =
    "#version 330 core\n\
     out vec4 color;
     in vec3 col;
+    in vec2 texCoords;\n\
+    uniform sampler2D texture1;\n\
+    uniform sampler2D texture2;\n\
     void main() {\n\
-        color = vec4(col, 1.0);\n\
+        vec2 uv = vec2(texCoords.x, 1.0 - texCoords.y);\n\
+        color = mix(texture(texture1, uv), texture(texture2, uv), 0.25);\n\
+        //vec4(col, 1.0);\n\
     }";
 
-const WIDTH: f32 = 1280.0;
-const HEIGHT: f32 = 720.0;
+const WIDTH: f32 = 800.0;
+const HEIGHT: f32 = 600.0;
 
 fn main() {
+
 
     let window = WindowBuilder::new()
         .with_title("rust-3d".to_string())
         .with_dimensions(WIDTH as u32, HEIGHT as u32)
-        .with_vsync()
         // .with_gl(GlRequest::Specific(Api::OpenGl, (3 as u8, 3 as u8)))
+        // .with_multisampling(16)
+        .with_vsync()
         .build()
         .unwrap();
 
@@ -156,14 +165,20 @@ fn main() {
     let mut vao = 0;
     let mut vbo = 0;
     // let mut ebo = 0;
-
+    let mut texture_id1 = 0;
+    let mut texture_id2 = 0;
     // custom matrix tests
     // let mat = Mat4x4::new_identity();
     // println!("{:?}", mat);
 
-    // let texture_img = image::open("resources/groundD.png").expect("Opening image failed");
-
     unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+        // gl::Enable(gl::CULL_FACE);
+        // gl::FrontFace(gl::CW);
+        // gl::CullFace(gl::FRONT_AND_BACK);
+        // Use shader program
+        gl::UseProgram(program);
+
         // Create Vertex Array Object
         gl::GenVertexArrays(1, &mut vao);
         gl::GenBuffers(1, &mut vbo);
@@ -192,26 +207,85 @@ fn main() {
 
         gl::BindVertexArray(0);
 
-        gl::Enable(gl::DEPTH_TEST);
-        // gl::Enable(gl::CULL_FACE);
-        // gl::FrontFace(gl::CW);
-        // gl::CullFace(gl::FRONT_AND_BACK);
-        // Use shader program
-        gl::UseProgram(program);
+        // ############################################
+        //                   TEXTURE1
+        // ############################################
+        gl::GenTextures(1, &mut texture_id1);
+        gl::BindTexture(gl::TEXTURE_2D, texture_id1);
+
+        // texture wrapping
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+
+        // texture filtering
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+        let tex_data1 = image::open("resources/ground_diffuse.png").expect("Opening image failed");
+        let tex_data1 = tex_data1.to_rgb();
+
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGB as i32,
+            tex_data1.width() as i32,
+            tex_data1.height() as i32,
+            0,
+            gl::RGB,
+            gl::UNSIGNED_BYTE,
+            mem::transmute(&tex_data1.into_raw()[0])
+        );
+
+        gl::GenerateMipmap(gl::TEXTURE_2D);
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+
+        // ############################################
+        //                   TEXTURE2
+        // ############################################
+
+        gl::GenTextures(1, &mut texture_id2);
+        gl::BindTexture(gl::TEXTURE_2D, texture_id2);
+
+        // texture wrapping
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+
+        // texture filtering
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+        let tex_data2 = image::open("resources/rust_logo.png").expect("Opening image failed");
+        let tex_data2 = tex_data2.to_rgb();
+
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGB as i32,
+            tex_data2.width() as i32,
+            tex_data2.height() as i32,
+            0,
+            gl::RGB,
+            gl::UNSIGNED_BYTE,
+            mem::transmute(&tex_data2.into_raw()[0])
+        );
+
+        gl::GenerateMipmap(gl::TEXTURE_2D);
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+
     }
 
     let mut time = 0.0;
     'running: loop {
 
         time += 0.16;
-        let ts = time::get_time();
+        // let ts = time::get_time();
         // println!("{:?}", ts.sec as f64);
-        let angle: f64 = ts.sec as f64 + ts.nsec as f64/1000000000.0;
+        // let angle: f64 = ts.sec as f64 + ts.nsec as f64/1000000000.0;
         // println!("{:?}", time);
 
         unsafe {
             // Clear the screen to black
-            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
+            gl::ClearColor(56.0/255.0, 142.0/255.0, 60.0/255.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             // near - as big as posible (0.1)
@@ -221,7 +295,7 @@ fn main() {
             // let projection_matrix: Matrix4<f32> = ortho(-WIDTH/2.0, WIDTH/2.0, -HEIGHT/2.0, HEIGHT/2.0, 0.1, 100.0);
 
             // opengl forward is -z;
-            let object_pos = Vector3::new(0.0, 0.0, -5.0);
+            let object_pos = Vector3::new(0.0, 0.0, -3.0);
 
             // let view_matrix = Matrix4::identity();
             let view_matrix: Matrix4<f32> = Matrix4::look_at(Point3::new(0.0, 0.0, 1.0), Point3::new(object_pos.x, object_pos.y, object_pos.z), Vector3::new(0.0, 1.0, 0.0));
@@ -245,6 +319,14 @@ fn main() {
             gl::UniformMatrix4fv(projection_location, 1, gl::FALSE, projection_matrix.as_ptr());
             gl::UniformMatrix4fv(model_location, 1, gl::FALSE, (model_matrix as Matrix4<f32>).as_ptr());
             gl::UniformMatrix4fv(view_location, 1, gl::FALSE, view_matrix.as_ptr());
+
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, texture_id1);
+            gl::Uniform1i(gl::GetUniformLocation(program, CString::new("texture1").unwrap().as_ptr()), 0);
+
+            gl::ActiveTexture(gl::TEXTURE1);
+            gl::BindTexture(gl::TEXTURE_2D, texture_id2);
+            gl::Uniform1i(gl::GetUniformLocation(program, CString::new("texture2").unwrap().as_ptr()), 1);
 
             gl::BindVertexArray(vao);
             // gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
