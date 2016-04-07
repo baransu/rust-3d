@@ -3,7 +3,7 @@ name = "rust-3d"
 version = "0.1.0"
 dependencies = [
  "cgmath 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gl 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gl_generator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "math 0.1.0",
@@ -182,14 +182,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "color_quant 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lzw 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "gl"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "gl_generator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -1,16 +1,19 @@
-extern crate gl;
 extern crate glutin;
 extern crate time;
 extern crate image;
 
 extern crate cgmath;
 
-// extern crate math;
+// import custom gl bindings
+mod gl {
+    include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
+}
 
 use gl::types::*;
 use std::mem;
 use std::ptr;
 use std::str;
+use std::cmp;
 
 use glutin::*;
 
@@ -144,7 +147,7 @@ fn main() {
     let window = WindowBuilder::new()
         .with_title("rust-3d".to_string())
         .with_dimensions(WIDTH as u32, HEIGHT as u32)
-        // .with_gl(GlRequest::Specific(Api::OpenGl, (3 as u8, 3 as u8)))
+        .with_gl(GlRequest::Specific(Api::OpenGl, (3 as u8, 3 as u8)))
         // .with_multisampling(16)
         .with_vsync()
         .build()
@@ -155,7 +158,10 @@ fn main() {
 
     // Load the OpenGL function pointers
     // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
-    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
+    gl::load_with(|symbol| {
+        // println!("{:?}", symbol);
+        window.get_proc_address(symbol) as *const _
+    });
 
     // Create GLSL shaders
     let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
@@ -237,6 +243,19 @@ fn main() {
         );
 
         gl::GenerateMipmap(gl::TEXTURE_2D);
+
+        let mut max_anisotropy = 0.0;
+        gl::GetFloatv(gl::MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_anisotropy);
+
+        if max_anisotropy > 4.0 {
+            max_anisotropy = 4.0;
+        }
+        println!("max_anisotropy {:?}", max_anisotropy);
+
+        gl::TexParameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, max_anisotropy);
+
+        // gl::TexParameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, );
+
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
         // ############################################
@@ -270,6 +289,9 @@ fn main() {
         );
 
         gl::GenerateMipmap(gl::TEXTURE_2D);
+
+        gl::TexParameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, max_anisotropy);
+
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
     }
