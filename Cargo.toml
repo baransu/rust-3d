@@ -1,5 +1,4 @@
 [package]
-build = "build.rs"
 name = "rust-3d"
 version = "0.1.0"
 authors = ["Baransu <sajgonek123@gmail.com>"]
@@ -10,12 +9,17 @@ name = "rust-3d"
 [dependencies.math]
 path = "src/math"
 
+[dependencies.engine]
+path = "src/engine"
+
+[dependencies.opengl]
+path = "src/opengl"
+
 [dependencies]
-# gl = "0.6.0"
 glutin = "0.4.9"
 time = "0.1.35"
 cgmath = "0.7.0"
 image = "0.8.0"
 
-[build-dependencies]
-gl_generator = "0.5.0"
+# [build-dependencies]
+# gl_generator = "0.5.0"

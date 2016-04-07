@@ -1,0 +1,14 @@
+[package]
+name = "engine"
+version = "0.1.0"
+authors = ["Baransu <sajgonek123@gmail.com>"]
+
+[lib]
+name = "engine"
+path = "lib.rs"
+
+[dependencies]
+cgmath = "0.7.0"
+
+[dependencies.opengl]
+path = "../opengl"

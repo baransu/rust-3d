@@ -3,10 +3,11 @@ name = "rust-3d"
 version = "0.1.0"
 dependencies = [
  "cgmath 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gl_generator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "engine 0.1.0",
  "glutin 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "math 0.1.0",
+ "opengl 0.1.0",
  "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -123,6 +124,14 @@ version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "engine"
+version = "0.1.0"
+dependencies = [
+ "cgmath 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "opengl 0.1.0",
 ]
 
 [[package]]
@@ -376,6 +385,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "malloc_buf 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "opengl"
+version = "0.1.0"
+dependencies = [
+ "gl_generator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

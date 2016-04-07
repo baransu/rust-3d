@@ -4,12 +4,12 @@ extern crate image;
 
 extern crate cgmath;
 
-// import custom gl bindings
-mod gl {
-    include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
-}
+extern crate engine;
+
+extern crate opengl as gl;
 
 use gl::types::*;
+
 use std::mem;
 use std::ptr;
 use std::str;
@@ -22,6 +22,8 @@ use cgmath::*;
 use std::ffi::CString;
 
 use std::fs::File;
+
+use engine::shader::Shader;
 
 // use math::mat4::Mat4;
 // use math::vec3::Vec3;
@@ -72,42 +74,6 @@ static VERTEX_DATA: [GLfloat; 8 * 36] = [
 
 ];
 
-// static VERTEX_DATA: [f32; 5 * 4] = [
-//    // Positions          // Texture Coords
-//     0.5,  0.5, 0.0,   1.0, 1.0, // Top Right
-//     0.5, -0.5, 0.0,   1.0, 0.0, // Bottom Right
-//    -0.5, -0.5, 0.0,   0.0, 0.0, // Bottom Left
-//    -0.5,  0.5, 0.0,   0.0, 1.0  // Top Left
-// ];
-
-// static INDICES: [i32; 6] = [ // Note that we start from 0!
-//    0, 1, 3, // First Triangle
-//    1, 2, 3  // Second Triangle
-// ];
-
-// static VERTEX_DATA: [f32; 8 * 3]= [
-//     -0.5, -0.5, 0.5,//Bottom Let
-//      0.5, -0.5, 0.5, //Bottom Right
-//      0.5, 0.5, 0.5,  //Top Right
-//     -0.5, 0.5, 0.5, //Top let
-//
-//     -0.5, -0.5, -0.5,//Bottom Let
-//      0.5, -0.5, -0.5, //Bottom Right
-//      0.5, 0.5, -0.5,  //Top Right
-//     -0.5, 0.5, -0.5 //Top let
-// ];
-//
-// static INDICES: [u32; 36] = [ // Note that we start from 0!
-//     0,1,2, 0,2,3,//front
-//     0,3,7, 0,7,4,//Left
-//     0,1,5, 0,5,4,//Bottom
-//
-//     6,7,4, 6,4,5,//Back
-//     6,7,3, 6,3,2,//top
-//     6,2,1, 6,1,5//right
-// ];
-
-
 // Shader sources
 static VS_SRC: &'static str =
    "#version 330 core\n\
@@ -143,7 +109,6 @@ const HEIGHT: f32 = 600.0;
 
 fn main() {
 
-
     let window = WindowBuilder::new()
         .with_title("rust-3d".to_string())
         .with_dimensions(WIDTH as u32, HEIGHT as u32)
@@ -163,27 +128,22 @@ fn main() {
         window.get_proc_address(symbol) as *const _
     });
 
-    // Create GLSL shaders
-    let vs = compile_shader(VS_SRC, gl::VERTEX_SHADER);
-    let fs = compile_shader(FS_SRC, gl::FRAGMENT_SHADER);
-    let program = link_program(vs, fs);
-
     let mut vao = 0;
     let mut vbo = 0;
     // let mut ebo = 0;
     let mut texture_id1 = 0;
     let mut texture_id2 = 0;
-    // custom matrix tests
-    // let mat = Mat4x4::new_identity();
-    // println!("{:?}", mat);
+
+    let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
+    shader.bind();
 
     unsafe {
+
+
         gl::Enable(gl::DEPTH_TEST);
         // gl::Enable(gl::CULL_FACE);
         // gl::FrontFace(gl::CW);
         // gl::CullFace(gl::FRONT_AND_BACK);
-        // Use shader program
-        gl::UseProgram(program);
 
         // Create Vertex Array Object
         gl::GenVertexArrays(1, &mut vao);
@@ -227,7 +187,7 @@ fn main() {
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
-        let tex_data1 = image::open("resources/ground_diffuse.png").expect("Opening image failed");
+        let tex_data1 = image::open("res/ground_diffuse.png").expect("Opening image failed");
         let tex_data1 = tex_data1.to_rgb();
 
         gl::TexImage2D(
@@ -254,8 +214,6 @@ fn main() {
 
         gl::TexParameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, max_anisotropy);
 
-        // gl::TexParameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, );
-
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
         // ############################################
@@ -273,7 +231,7 @@ fn main() {
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
-        let tex_data2 = image::open("resources/rust_logo.png").expect("Opening image failed");
+        let tex_data2 = image::open("res/rust_logo.png").expect("Opening image failed");
         let tex_data2 = tex_data2.to_rgb();
 
         gl::TexImage2D(
@@ -299,6 +257,8 @@ fn main() {
     let mut time = 0.0;
     'running: loop {
 
+        // shader.bind();
+
         time += 0.16;
         // let ts = time::get_time();
         // println!("{:?}", ts.sec as f64);
@@ -306,6 +266,8 @@ fn main() {
         // println!("{:?}", time);
 
         unsafe {
+            // shader.bind();
+
             // Clear the screen to black
             gl::ClearColor(56.0/255.0, 142.0/255.0, 60.0/255.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -333,22 +295,18 @@ fn main() {
 
             // println!("{:?}", model_matrix);
 
-            // uniform matrixes
-            let projection_location = gl::GetUniformLocation(program, CString::new("projection").unwrap().as_ptr());
-            let model_location = gl::GetUniformLocation(program, CString::new("model").unwrap().as_ptr());
-            let view_location = gl::GetUniformLocation(program, CString::new("view").unwrap().as_ptr());
+            shader.set_uniform_matrix4fv("projection", &projection_matrix);
+            shader.set_uniform_matrix4fv("model", &(model_matrix as Matrix4<f32>));
+            shader.set_uniform_matrix4fv("view", &view_matrix);
 
-            gl::UniformMatrix4fv(projection_location, 1, gl::FALSE, projection_matrix.as_ptr());
-            gl::UniformMatrix4fv(model_location, 1, gl::FALSE, (model_matrix as Matrix4<f32>).as_ptr());
-            gl::UniformMatrix4fv(view_location, 1, gl::FALSE, view_matrix.as_ptr());
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, texture_id1);
-            gl::Uniform1i(gl::GetUniformLocation(program, CString::new("texture1").unwrap().as_ptr()), 0);
+            shader.set_uniform_1i("texture1", 0);
 
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, texture_id2);
-            gl::Uniform1i(gl::GetUniformLocation(program, CString::new("texture2").unwrap().as_ptr()), 1);
+            shader.set_uniform_1i("texture2", 1);
 
             gl::BindVertexArray(vao);
             // gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
@@ -371,61 +329,7 @@ fn main() {
 
     // Cleanup - OpenGL memory dealocation
     unsafe {
-        gl::DeleteProgram(program);
-        gl::DeleteShader(fs);
-        gl::DeleteShader(vs);
         gl::DeleteBuffers(1, &vbo);
         gl::DeleteVertexArrays(1, &vao);
-    }
-}
-
-fn compile_shader(src: &str, ty: GLenum) -> GLuint {
-    unsafe {
-        let shader = gl::CreateShader(ty);
-
-        // attempt to compile the shader
-        let c_str = CString::new(src.as_bytes()).unwrap();
-        gl::ShaderSource(shader, 1, &c_str.as_ptr(), ptr::null());
-        gl::CompileShader(shader);
-
-        // get compilation status
-        let mut status = gl::FALSE as GLint;
-
-        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
-
-        // Fail on error
-
-        if status != (gl::TRUE as GLint) {
-            let mut len = 0;
-            gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
-            let mut buf = Vec::with_capacity(len as usize);
-            buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
-            gl::GetShaderInfoLog(shader, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
-            panic!("{}", str::from_utf8(&buf).ok().expect("ShaderIngoLog not valid for utf8"));
-        }
-        shader
-    }
-}
-
-fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
-    unsafe {
-        let program = gl::CreateProgram();
-        gl::AttachShader(program, vs);
-        gl::AttachShader(program, fs);
-        gl::LinkProgram(program);
-        // Get the link status
-        let mut status = gl::FALSE as GLint;
-        gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
-
-        // Fail on error
-        if status != (gl::TRUE as GLint) {
-            let mut len: GLint = 0;
-            gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut len);
-            let mut buf = Vec::with_capacity(len as usize);
-            buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
-            gl::GetProgramInfoLog(program, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
-            panic!("{}", str::from_utf8(&buf).ok().expect("ProgramInfoLog not valid utf8"));
-        }
-        program
     }
 }
