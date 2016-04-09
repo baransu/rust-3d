@@ -8,8 +8,11 @@ name = "engine"
 path = "lib.rs"
 
 [dependencies]
-cgmath = "0.7.0"
+# cgmath = "0.7.0"
 image = "0.8.0"
 
 [dependencies.opengl]
 path = "../opengl"
+
+[dependencies.math]
+path = "../math"

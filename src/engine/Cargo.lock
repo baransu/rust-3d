@@ -2,8 +2,8 @@
 name = "engine"
 version = "0.1.0"
 dependencies = [
- "cgmath 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "math 0.1.0",
  "opengl 0.1.0",
 ]
 
@@ -21,16 +21,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "byteorder"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "cgmath"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "num 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "color_quant"
@@ -150,6 +140,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "lzw"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "math"
+version = "0.1.0"
 
 [[package]]
 name = "miniz-sys"

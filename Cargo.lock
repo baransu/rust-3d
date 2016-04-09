@@ -2,12 +2,12 @@
 name = "rust-3d"
 version = "0.1.0"
 dependencies = [
- "cgmath 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "engine 0.1.0",
  "glutin 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "math 0.1.0",
  "opengl 0.1.0",
+ "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -33,16 +33,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gleam 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "cgmath"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "num 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -130,8 +120,8 @@ dependencies = [
 name = "engine"
 version = "0.1.0"
 dependencies = [
- "cgmath 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "math 0.1.0",
  "opengl 0.1.0",
 ]
 

@@ -1,11 +1,11 @@
 extern crate glutin;
 extern crate time;
 extern crate image;
+extern crate rand;
 
-extern crate cgmath;
-
+// local
+extern crate math;
 extern crate engine;
-
 extern crate opengl as gl;
 
 use gl::types::*;
@@ -17,17 +17,22 @@ use std::ptr;
 
 use glutin::*;
 
-use cgmath::*;
+use rand::Rng;
+
+// use cgmath::*;
 
 // use std::ffi::CString;
 //
 // use std::fs::File;
 
+
+// local
 use engine::shader::Shader;
 use engine::texture::Texture;
+use engine::transform::Transform;
 
-// use math::mat4::Mat4;
-// use math::vec3::Vec3;
+use math::mat4::Mat4;
+use math::vec3::Vec3;
 
 static VERTEX_DATA: [GLfloat; 8 * 36] = [
                                 //color
@@ -111,6 +116,28 @@ fn main() {
     let texture1 = Texture::new("res/ground_diffuse.png", 4.0);
     let texture2 = Texture::new("res/rust_logo.png", 4.0);
 
+    let mut entities = Vec::new();
+
+    for _ in 0..1000 {
+
+        // x e<-5, 5>
+        let pos_x = rand::thread_rng().gen_range(-5.0, 6.0);
+        // y e<-5, 5>
+        let pos_y = rand::thread_rng().gen_range(-5.0, 6.0);
+        // z e<-10, 0>
+        let pos_z = rand::thread_rng().gen_range(-5.0, 6.0);
+
+        // rotaion e(1, 360)
+        let rot_x = rand::thread_rng().gen_range(1.0, 360.0);
+        let rot_y = rand::thread_rng().gen_range(1.0, 360.0);
+        let rot_z = rand::thread_rng().gen_range(1.0, 360.0);
+
+        // scale e<0.25, 1>
+        let scale = rand::thread_rng().gen_range(0.25, 1.25);
+
+        entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
+    }
+
     unsafe {
 
 
@@ -152,16 +179,13 @@ fn main() {
     let mut time = 0.0;
     'running: loop {
 
-        // shader.bind();
-
         time += 0.16;
-        // let ts = time::get_time();
+        let ts = time::get_time();
         // println!("{:?}", ts.sec as f64);
-        // let angle: f64 = ts.sec as f64 + ts.nsec as f64/1000000000.0;
+        let angle: f64 = ts.sec as f64 + ts.nsec as f64/1000000000.0;
         // println!("{:?}", time);
 
         unsafe {
-            // shader.bind();
 
             // Clear the screen to black
             gl::ClearColor(56.0/255.0, 142.0/255.0, 60.0/255.0, 1.0);
@@ -169,30 +193,14 @@ fn main() {
 
             // near - as big as posible (0.1)
             // far - as small as posible (100 - far and small enought)
-            // let perspective_matrix = Mat4::new_perspective();
-            let projection_matrix: Matrix4<f32> = perspective(deg(45.0), WIDTH/HEIGHT, 0.1, 100.0);
-            // let projection_matrix: Matrix4<f32> = ortho(-WIDTH/2.0, WIDTH/2.0, -HEIGHT/2.0, HEIGHT/2.0, 0.1, 100.0);
+            let projection_matrix = Mat4::from_perspective(45.0, WIDTH/HEIGHT, 0.1, 100.0);
+
+            let radius = 20.0;
+            let cam_x = angle.cos() * radius;
+        	let cam_z = angle.sin() * radius;
 
             // opengl forward is -z;
-            let object_pos = Vector3::new(0.0, 0.0, -3.0);
-
-            // let view_matrix = Matrix4::identity();
-            let view_matrix: Matrix4<f32> = Matrix4::look_at(Point3::new(0.0, 0.0, 1.0), Point3::new(object_pos.x, object_pos.y, object_pos.z), Vector3::new(0.0, 1.0, 0.0));
-
-            // let translation = Matrix4::identity();
-            let translation: Matrix4<f32> = Matrix4::from_translation(object_pos);
-            let t: f32 = time/10.0;
-            let quat: Quaternion<f32> = Rotation3::from_euler(rad(0.5 * t), rad(1.0 * t), rad(0.0));
-            let rotation: Matrix4<f32> = Matrix4::from(quat);
-            // let scale: Matrix4<f32> = Matrix4::from_scale((angle/10.0).sin() as f32);
-
-            let model_matrix = translation * rotation;
-
-            // println!("{:?}", model_matrix);
-
-            shader.set_uniform_matrix4fv("projection", &projection_matrix);
-            shader.set_uniform_matrix4fv("model", &(model_matrix as Matrix4<f32>));
-            shader.set_uniform_matrix4fv("view", &view_matrix);
+            let view_matrix = Mat4::from_look_at(&Vec3::new(cam_x as f32, 0.0, cam_z as f32), &Vec3::new(0.0, 0.0, 0.0), &Vec3::new(0.0, 1.0, 0.0));
 
             texture1.bind(gl::TEXTURE0);
             shader.set_uniform_1i("texture1", 0);
@@ -200,13 +208,25 @@ fn main() {
             texture2.bind(gl::TEXTURE1);
             shader.set_uniform_1i("texture2", 1);
 
-            gl::BindVertexArray(vao);
-            // gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
-            gl::DrawArrays(gl::TRIANGLES, 0, 36);
-            gl::BindVertexArray(0);
-            // // Draw a triangle from the 3 vertices
-        }
+            shader.set_uniform_matrix4fv("projection", projection_matrix);
+            shader.set_uniform_matrix4fv("view", view_matrix);
 
+            gl::BindVertexArray(vao);
+
+            for entity in &mut entities {
+
+                entity.rotation.x += 10.0 * 0.16;
+                entity.rotation.z += 5.0 * 0.16;
+
+                shader.set_uniform_matrix4fv("model", entity.get_model_matrix());
+                // Draw cube
+                gl::DrawArrays(gl::TRIANGLES, 0, 36);
+
+            }
+
+            gl::BindVertexArray(0);
+
+        }
 
         window.swap_buffers().unwrap();
 

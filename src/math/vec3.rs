@@ -1,6 +1,6 @@
 use std::fmt;
 
-use mat4::Mat4;
+// use mat4::Mat4;
 
 #[derive(Copy, Clone)]
 pub struct Vec3 {

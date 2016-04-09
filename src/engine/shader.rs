@@ -1,4 +1,4 @@
-extern crate cgmath;
+extern crate math;
 extern crate opengl as gl;
 
 use std::error::Error;
@@ -9,11 +9,11 @@ use std::str;
 use std::ffi::CString;
 use std::ptr;
 
-use self::cgmath::*;
+use self::math::mat4::Mat4;
 use self::gl::types::*;
 
 pub struct Shader {
-    program: u32
+    pub program: u32
 }
 
 impl Drop for Shader {
@@ -83,16 +83,16 @@ impl Shader {
         gl::GetUniformLocation(self.program, CString::new(name).unwrap().as_ptr())
     }
 
-    pub fn set_uniform_matrix4fv(&self, name: &str, matrix: &Matrix4<f32>) {
+    pub fn set_uniform_matrix4fv(&self, name: &str, matrix: Mat4) {
         unsafe {
-            let location = gl::GetUniformLocation(self.program, CString::new(name).unwrap().as_ptr());
+            let location = self.get_shader_location(name);
             gl::UniformMatrix4fv(location, 1, gl::FALSE, matrix.as_ptr());
         }
     }
 
     pub fn set_uniform_1i(&self, name: &str, value: i32) {
         unsafe {
-            let location = gl::GetUniformLocation(self.program, CString::new(name).unwrap().as_ptr());
+            let location = self.get_shader_location(name);
             gl::Uniform1i(location, value);
         }
     }
