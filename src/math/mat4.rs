@@ -127,20 +127,11 @@ impl Mat4 {
     pub fn new_look_at(camera: &Vec3, object: &Vec3, up: &Vec3) -> Mat4 {
         let mut mat = Mat4::new_identity();
 
-        let f = object.sub(camera);
-        let f = f.normalize();
-
-        // f.sub(camera);
-        // f.normalize();
+        let f = object.sub(camera).normalize();
 
         let s = f.cross(&up.normalize());
 
-        // up.normalize();
-        // s.cross(up);
-
         let u = s.cross(&f);
-
-        // u.cross(&f);
 
         mat.elements[0 + 0 * 4] = s.x;
         mat.elements[0 + 1 * 4] = s.y;
