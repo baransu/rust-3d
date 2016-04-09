@@ -10,12 +10,12 @@ use std::mem;
 pub struct Texture {
     texture_id: u32,
 }
-//
-// impl Drop for Texture {
-//     fn drop(&mut self) {
-//         unsafe { gl::DeleteTextures(1, &mut self.texture_id) } ;
-//     }
-// }
+
+impl Drop for Texture {
+    fn drop(&mut self) {
+        unsafe { gl::DeleteTextures(1, &mut self.texture_id) } ;
+    }
+}
 
 impl Texture {
     pub fn new(texture_path: &str, anisotropy: f32) -> Texture {
