@@ -112,14 +112,14 @@ impl Mat4 {
         mat
     }
 
-    pub fn from_look_at(camera: &Vec3, object: &Vec3, up: &Vec3) -> Mat4 {
+    pub fn from_look_at(camera: Vec3, object: Vec3, up: Vec3) -> Mat4 {
         let mut mat = Mat4::new(1.0);
 
-        let f = object.sub(camera).normalize();
+        let f = (object - camera).normalize();
 
-        let s = f.cross(&up.normalize());
+        let s = Vec3::cross(f, up.normalize());
 
-        let u = s.cross(&f);
+        let u = Vec3::cross(s, f);
 
         // col + row * 4
         mat.elements[0 + 0 * 4] = s.x;

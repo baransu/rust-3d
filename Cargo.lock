@@ -123,6 +123,7 @@ dependencies = [
  "image 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "math 0.1.0",
  "opengl 0.1.0",
+ "tobj 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -472,6 +473,11 @@ dependencies = [
  "libc 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "tobj"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "user32-sys"

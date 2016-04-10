@@ -1,7 +1,8 @@
 use std::fmt;
 
-// use mat4::Mat4;
+use std::ops::{ Sub, Add, Mul, Div };
 
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Vec3 {
     pub x: f32,
@@ -19,26 +20,34 @@ impl Vec3 {
         }
     }
 
-    pub fn add(&self, other: &Vec3) -> Vec3 {
-        let x = self.x + other.x;
-        let y = self.y + other.y;
-        let z = self.z + other.z;
-        Vec3 {x: x , y: y, z: z}
+    pub fn from_vec(vec: Vec<f32>) -> Vec3 {
+        Vec3 {
+            x: vec[0],
+            y: vec[1],
+            z: vec[2],
+        }
     }
 
-    pub fn sub(&self, other: &Vec3) -> Vec3{
-        let x = self.x - other.x;
-        let y = self.y - other.y;
-        let z = self.z - other.z;
-        Vec3 {x: x , y: y, z: z}
-    }
-
-    pub fn multiply(&self, other: &Vec3) -> Vec3 {
-        let x = self.x * other.x;
-        let y = self.y * other.y;
-        let z = self.z * other.z;
-        Vec3 {x: x, y: y, z: z}
-    }
+    // pub fn add(&self, other: &Vec3) -> Vec3 {
+    //     let x = self.x + other.x;
+    //     let y = self.y + other.y;
+    //     let z = self.z + other.z;
+    //     Vec3 {x: x , y: y, z: z}
+    // }
+    //
+    // pub fn sub(&self, other: &Vec3) -> Vec3{
+    //     let x = self.x - other.x;
+    //     let y = self.y - other.y;
+    //     let z = self.z - other.z;
+    //     Vec3 {x: x , y: y, z: z}
+    // }
+    //
+    // pub fn multiply(&self, other: &Vec3) -> Vec3 {
+    //     let x = self.x * other.x;
+    //     let y = self.y * other.y;
+    //     let z = self.z * other.z;
+    //     Vec3 {x: x, y: y, z: z}
+    // }
 
     // pub fn multiply_mat(&mut self, transform: &Mat4) {
     //     let mut x = transform.elements[0 + 0 * 4] * self.x + transform.elements[0 + 1 * 4] * self.y + transform.elements[0 + 2 * 4] * self.z + transform.elements[0 + 3 * 4];
@@ -49,12 +58,12 @@ impl Vec3 {
     //     self.z = z;
     // }
 
-    pub fn divide(&self, other: &Vec3) -> Vec3 {
-        let x = self.x / other.x;
-        let y = self.y / other.y;
-        let z = self.z / other.z;
-        Vec3 {x: x, y: y, z: z}
-    }
+    // pub fn divide(&self, other: &Vec3) -> Vec3 {
+    //     let x = self.x / other.x;
+    //     let y = self.y / other.y;
+    //     let z = self.z / other.z;
+    //     Vec3 {x: x, y: y, z: z}
+    // }
 
     pub fn dot(&self, other: &Vec3) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
@@ -68,12 +77,19 @@ impl Vec3 {
         self.len2().sqrt()
     }
 
-    pub fn cross(&self, other: &Vec3) -> Vec3 {
-        let x = self.y * other.z - self.z * other.y;
-        let y = self.z * other.x - self.x * other.z;
-        let z = self.x * other.y - self.y * other.x;
+    pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
+        let x = a.y * b.z - a.z * b.y;
+        let y = a.z * b.x - a.x * b.z;
+        let z = a.x * b.y - a.y * b.x;
         Vec3 { x: x, y: y, z: z }
     }
+
+    // pub fn cross(&self, other: &Vec3) -> Vec3 {
+    //     let x = self.y * other.z - self.z * other.y;
+    //     let y = self.z * other.x - self.x * other.z;
+    //     let z = self.x * other.y - self.y * other.x;
+    //     Vec3 { x: x, y: y, z: z }
+    // }
 
     pub fn normalize(&self) -> Vec3 {
         let len = self.len();
@@ -86,6 +102,54 @@ impl Vec3 {
         Vec3 { x: 0.0, y: 0.0, z: 0.0 }
     }
 
+}
+
+impl Mul for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
+        }
+    }
+}
+
+impl Div for Vec3 {
+    type Output = Vec3;
+
+    fn div(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x / other.x,
+            y: self.y / other.y,
+            z: self.z / other.z,
+        }
+    }
+}
+
+impl Add for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
 }
 
 

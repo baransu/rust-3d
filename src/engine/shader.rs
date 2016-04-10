@@ -10,6 +10,8 @@ use std::ffi::CString;
 use std::ptr;
 
 use self::math::mat4::Mat4;
+use self::math::vec3::Vec3;
+
 use self::gl::types::*;
 
 pub struct Shader {
@@ -97,6 +99,12 @@ impl Shader {
         }
     }
 
+    pub fn set_uniform_3f(&self, name: &str, value: Vec3) {
+        unsafe {
+            let location = self.get_shader_location(name);
+            gl::Uniform3f(location, value.x, value.y, value.z);
+        }
+    }
 
 }
 

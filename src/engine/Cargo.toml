@@ -8,7 +8,7 @@ name = "engine"
 path = "lib.rs"
 
 [dependencies]
-# cgmath = "0.7.0"
+tobj = "0.1.1"
 image = "0.8.0"
 
 [dependencies.opengl]
