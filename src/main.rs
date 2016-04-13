@@ -35,6 +35,7 @@ use engine::camera::Camera;
 
 use math::mat4::Mat4;
 use math::vec3::Vec3;
+use math::vec2::Vec2;
 
 // static VERTEX_DATA: [GLfloat; 8 * 36] = [
 //                                 //color
@@ -82,8 +83,8 @@ use math::vec3::Vec3;
 //
 // ];
 
-const WIDTH: f32 = 1280.0;
-const HEIGHT: f32 = 720.0;
+const WIDTH: f32 = 800.0;
+const HEIGHT: f32 = 600.0;
 
 fn main() {
 
@@ -120,33 +121,35 @@ fn main() {
     let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
     shader.bind();
 
-    // let texture1 = Texture::new("res/ground_diffuse.png", 4.0);
-    // let texture2 = Texture::new("res/rust_logo.png", 4.0);
+    let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
+    let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
+    let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
 
     let mut entities = Vec::new();
 
     // let model = Mod::new("res/susanne_lowpoly.obj");
-    let model = Mod::new("res/susanne_highpoly.obj");
+    // let model = Mod::new("res/susanne_highpoly.obj");
+    let model = Mod::new("res/mouse/mouselowpoly.obj");
 
-    for _ in 0..10 {
-
-        // x e<-5, 5>
-        let pos_x = rand::thread_rng().gen_range(-5.0, 6.0);
-        // y e<-5, 5>
-        let pos_y = rand::thread_rng().gen_range(-5.0, 6.0);
-        // z e<-10, 0>
-        let pos_z = rand::thread_rng().gen_range(-5.0, 6.0);
-
-        // rotaion e(1, 360)
-        let rot_x = rand::thread_rng().gen_range(1.0, 360.0);
-        let rot_y = rand::thread_rng().gen_range(1.0, 360.0);
-        let rot_z = rand::thread_rng().gen_range(1.0, 360.0);
-
-        // scale e<0.25, 1>
-        let scale = rand::thread_rng().gen_range(0.25, 1.25);
-
-        entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
-    }
+    // for _ in 0..1 {
+    //
+    //     // x e<-5, 5>
+    //     let pos_x = rand::thread_rng().gen_range(-5.0, 6.0);
+    //     // y e<-5, 5>
+    //     let pos_y = rand::thread_rng().gen_range(-5.0, 6.0);
+    //     // z e<-10, 0>
+    //     let pos_z = rand::thread_rng().gen_range(-5.0, 6.0);
+    //
+    //     // rotaion e(1, 360)
+    //     let rot_x = rand::thread_rng().gen_range(1.0, 360.0);
+    //     let rot_y = rand::thread_rng().gen_range(1.0, 360.0);
+    //     let rot_z = rand::thread_rng().gen_range(1.0, 360.0);
+    //
+    //     // scale e<0.25, 1>
+    //     let scale = rand::thread_rng().gen_range(0.25, 1.25);
+    //
+    //     entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
+    // }
 
     entities.push(Transform::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
 
@@ -159,34 +162,6 @@ fn main() {
         // gl::CullFace(gl::FRONT_AND_BACK);
 
         // Create Vertex Array Object
-        // gl::GenVertexArrays(1, &mut vao);
-        // gl::GenBuffers(1, &mut vbo);
-        // // gl::GenBuffers(1, &mut ebo);
-        //
-        // gl::BindVertexArray(vao);
-        //
-        // // Create a Vertex Buffer Object and copy the vertex data to it
-        // gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        // gl::BufferData(gl::ARRAY_BUFFER, (VERTEX_DATA.len() * mem::size_of::<f32>()) as GLsizeiptr, mem::transmute(&VERTEX_DATA[0]), gl::STATIC_DRAW);
-        // //
-        // // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        // // gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (INDICES.len() * mem::size_of::<u32>()) as GLsizeiptr, mem::transmute(&INDICES[0]), gl::STATIC_DRAW);
-        // //
-        //
-        // // Specify the layout of the vertex data
-        // // let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
-        // gl::EnableVertexAttribArray(0);
-        // gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, ptr::null());
-        //
-        // gl::EnableVertexAttribArray(1);
-        // gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(3 * mem::size_of::<GLfloat>()));
-        //
-        // gl::EnableVertexAttribArray(2);
-        // gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(5 * mem::size_of::<GLfloat>()));
-        //
-        // gl::BindVertexArray(0);
-
-        // Create Vertex Array Object
         gl::GenVertexArrays(1, &mut vao);
         gl::GenBuffers(1, &mut vbo);
         gl::GenBuffers(1, &mut ebo);
@@ -197,20 +172,29 @@ fn main() {
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(gl::ARRAY_BUFFER, (model.vertices.len() * mem::size_of::<Vertex>()) as GLsizeiptr, mem::transmute(&model.vertices[0]), gl::STATIC_DRAW);
 
-        // gl::BindBuffer(gl::ARRAY_BUFFER, vbo_normals);
-        // gl::BufferData(gl::ARRAY_BUFFER, (model.normals.len() * mem::size_of::<Vec3>()) as GLsizeiptr, mem::transmute(&model.normals[0]), gl::STATIC_DRAW);
-        // //
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
         gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (model.indices.len() * mem::size_of::<u32>()) as GLsizeiptr, mem::transmute(&model.indices[0]), gl::STATIC_DRAW);
 
         // Specify the layout of the vertex data
         // let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
+        println!("vertex size {:?} | 14f32 size {:?}", mem::size_of::<Vertex>(), 14 * mem::size_of::<GLfloat>());
+
+        // pos
         gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, (6 * mem::size_of::<GLfloat>()) as i32, ptr::null());
-        // gl::EnableVertexAttribArray(1);
-        // gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(2 * mem::size_of::<f32>()));
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, ptr::null());
+        // uvs
+        gl::EnableVertexAttribArray(1);
+        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(3 * mem::size_of::<f32>()));
+        // normal
         gl::EnableVertexAttribArray(2);
-        gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE as GLboolean, (6 * mem::size_of::<GLfloat>()) as i32, mem::transmute(mem::size_of::<Vec3>()));
+        gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(5 * mem::size_of::<f32>()));
+        // tangent
+        gl::EnableVertexAttribArray(3);
+        gl::VertexAttribPointer(3, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(8 * mem::size_of::<f32>()));
+        // binormal
+        gl::EnableVertexAttribArray(4);
+        gl::VertexAttribPointer(4, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(11 * mem::size_of::<f32>()));
+
 
         // gl::EnableVertexAttribArray(1);
         // gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(3 * mem::size_of::<GLfloat>()));
@@ -251,16 +235,20 @@ fn main() {
             // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
             let view_matrix = camera.get_look_at_matrix();
 
-            // texture1.bind(gl::TEXTURE0);
-            // shader.set_uniform_1i("texture1", 0);
-            //
-            // texture2.bind(gl::TEXTURE1);
-            // shader.set_uniform_1i("texture2", 1);
+            normal_map.bind(gl::TEXTURE0);
+            shader.set_uniform_1i("normalMap", 0);
+
+            diffuse_map.bind(gl::TEXTURE1);
+            shader.set_uniform_1i("diffuseMap", 1);
+
+            specular_map.bind(gl::TEXTURE2);
+            shader.set_uniform_1i("specularMap", 2);
+
 
             shader.set_uniform_matrix4fv("projection", projection_matrix);
             shader.set_uniform_matrix4fv("view", view_matrix);
 
-            let ligh_pos = Vec3::new(1.0, 1.0, 5.0);
+            let ligh_pos = Vec3::new(0.0, 5.0, 5.0);
             shader.set_uniform_3f("lightPos", ligh_pos);
             shader.set_uniform_3f("viewPos", camera.position);
 
@@ -268,8 +256,8 @@ fn main() {
 
             for entity in &mut entities {
 
-                entity.rotation.y += 5.0 * 0.16;
-                entity.rotation.z += 5.0 * 0.16;
+                // entity.rotation.y += 5.0 * 0.16;
+                // entity.rotation.z += 5.0 * 0.16;
 
                 shader.set_uniform_matrix4fv("model", entity.get_model_matrix());
                 // Draw cube

@@ -1,42 +1,69 @@
-#version 410 core
+#version 330 core
 
-// uniform sampler2D texture1;
-// uniform sampler2D texture2;
+uniform sampler2D normalMap;
+uniform sampler2D diffuseMap;
+uniform sampler2D specularMap;
 
 uniform vec3 lightPos;
-uniform vec3 viewPos;
 
 out vec4 color;
 
-in vec3 FragPos;
-in vec3 Normal;
-// in vec2 TexCoords;
+in VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoords;
+    vec3 Normal;
+    vec3 TangentLightPos;
+    vec3 TangentViewPos;
+    vec3 TangentFragPos;
+} fs_in;
 
 float ambientStrength = 0.1f;
 float specularStrength = 0.5f;
+//
+// vec3 lightColor = vec3(1.0, 1.0, 1.0);
+// vec3 objectColor = vec3(0.5, 0.0, 0.5);
 
-vec3 lightColor = vec3(1.0, 1.0, 1.0);
-vec3 objectColor = vec3(0.5, 0.0, 0.5);
+const float constant = 1.0f;
+const float linear = 0.09f;
+const float quadratic = 0.032f;
+
+const float Pi = 3.14159265;
+const float shininess = 32.0;
 
 void main() {
+  // Obtain normal map from texture [0, 1]
+  vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;
+  // convert to [-1, 1]
+  normal = normalize(normal * 2.0 - 1.0);
+
+  // diffuse color from texture
+  vec3 col = texture(diffuseMap, fs_in.TexCoords).rgb;
 
   // ambient
-  vec3 ambient = ambientStrength * lightColor;
+  vec3 ambient = ambientStrength * col;
 
-  // diffues
-  vec3 norm = normalize(Normal);
-  vec3 lightDir = normalize(lightPos - FragPos);
-  float diff = max(dot(norm, lightDir), 0.0);
-  vec3 diffuse = diff * lightColor;
+  // diffuse
+  vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
+  float diff = max(dot(lightDir, normal), 0.0);
+  vec3 diffuse = diff * col;
 
   // specular
-  vec3 viewDir = normalize(viewPos - FragPos);
-  vec3 reflectDir = reflect(-lightDir, norm);
-  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-  vec3 specular = specularStrength * spec * lightColor;
+  vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
+  vec3 reflectDir = reflect(-lightDir, normal);
+  vec3 halfwayDir = normalize(lightDir + viewDir);
+  float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
 
-  vec3 result = (ambient + diffuse + specular) * objectColor;
+  // vec3 specular = vec3(specularStrength) * spec;
+  vec3 specular = vec3(specularStrength) * spec * vec3(texture(specularMap, fs_in.TexCoords));
+
+  // float distance = length(lightPos - fs_in.FragPos);
+  // float attenuation = 1.0f / (constant + linear * distance + quadratic * (distance * distance));
+  //
+  // ambient *= attenuation;
+  // diffuse *= attenuation;
+  // specular *= attenuation;
+
+  vec3 result = ambient + diffuse + specular;
   color = vec4(result, 1.0);
-  // vec2 uv = vec2(texCoords.x, 1.0 - texCoords.y);
-  // color = mix(texture(texture1, uv), texture(texture2, uv), 0.25);
+
 }
