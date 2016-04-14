@@ -7,15 +7,16 @@ use std::mem;
 
 // use self::gl::types::*;
 
+#[derive(Copy, Clone)]
 pub struct Texture {
     texture_id: u32,
 }
 
-impl Drop for Texture {
-    fn drop(&mut self) {
-        unsafe { gl::DeleteTextures(1, &mut self.texture_id) } ;
-    }
-}
+// impl Drop for Texture {
+//     fn drop(&mut self) {
+//         unsafe { gl::DeleteTextures(1, &mut self.texture_id) } ;
+//     }
+// }
 
 impl Texture {
     pub fn new(texture_path: &str, anisotropy: f32) -> Texture {
@@ -36,26 +37,26 @@ impl Texture {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
             let texture_data = image::open(texture_path).expect("Opening image for texture failed");
-            let texture_data = texture_data.to_rgb();
+            let texture_data = texture_data.to_rgba();
 
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
-                gl::RGB as i32,
+                gl::RGBA as i32,
                 texture_data.width() as i32,
                 texture_data.height() as i32,
                 0,
-                gl::RGB,
+                gl::RGBA,
                 gl::UNSIGNED_BYTE,
                 mem::transmute(&texture_data.into_raw()[0])
             );
 
             gl::GenerateMipmap(gl::TEXTURE_2D);
 
-            let mut max_anisotropy = 0.0;
-            gl::GetFloatv(gl::MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_anisotropy);
+            let max_anisotropy = 16.0;
+            // gl::GetFloatv(gl::MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_anisotropy);
 
-            println!("max anisotropy: {:?}", max_anisotropy);
+            // println!("max anisotropy: {:?}", max_anisotropy);
 
             if anisotropy > max_anisotropy {
                 current_anisotropy = max_anisotropy;

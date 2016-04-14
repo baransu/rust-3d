@@ -26,7 +26,7 @@ void main() {
   gl_Position = projection * view * model * vec4(position, 1.0);
   vs_out.FragPos = vec3(model * vec4(position, 1.0));
   vs_out.Normal = mat3(transpose(inverse(model))) * normal;
-  vs_out.TexCoords = vec2(texcoord.x, 1.0 - texcoord.y);
+  vs_out.TexCoords = vec2(texcoord.x, texcoord.y);
   // vs_out.TexCoords = texcoord;
 
   mat3 normalMatrix = transpose(inverse(mat3(model)));

@@ -30,7 +30,7 @@ use rand::Rng;
 use engine::shader::Shader;
 use engine::texture::Texture;
 use engine::transform::Transform;
-use engine::model:: { Vertex, Mod };
+use engine::model:: { Modell };
 use engine::camera::Camera;
 
 use math::mat4::Mat4;
@@ -114,22 +114,19 @@ fn main() {
 
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 20.0), Vec3::new(0.0, 0.0, -90.0));
 
-    let mut vao = 0;
-    let mut vbo = 0;
-    let mut ebo = 0;
-
     let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
     shader.bind();
 
-    let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
-    let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
-    let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
+    // let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
+    // let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
+    // let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
 
     let mut entities = Vec::new();
 
     // let model = Mod::new("res/susanne_lowpoly.obj");
     // let model = Mod::new("res/susanne_highpoly.obj");
-    let model = Mod::new("res/mouse/mouselowpoly.obj");
+    // let model = Modell::new("res/mouse/mouselowpoly.obj");
+    let model = Modell::new("res/ves/", "Ves.obj");
 
     // for _ in 0..1 {
     //
@@ -151,58 +148,14 @@ fn main() {
     //     entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
     // }
 
-    entities.push(Transform::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
 
     unsafe {
-
 
         gl::Enable(gl::DEPTH_TEST);
         // gl::Enable(gl::CULL_FACE);
         // gl::FrontFace(gl::CW);
         // gl::CullFace(gl::FRONT_AND_BACK);
-
-        // Create Vertex Array Object
-        gl::GenVertexArrays(1, &mut vao);
-        gl::GenBuffers(1, &mut vbo);
-        gl::GenBuffers(1, &mut ebo);
-
-        gl::BindVertexArray(vao);
-
-        // Create a Vertex Buffer Object and copy the vertex data to it
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, (model.vertices.len() * mem::size_of::<Vertex>()) as GLsizeiptr, mem::transmute(&model.vertices[0]), gl::STATIC_DRAW);
-
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (model.indices.len() * mem::size_of::<u32>()) as GLsizeiptr, mem::transmute(&model.indices[0]), gl::STATIC_DRAW);
-
-        // Specify the layout of the vertex data
-        // let pos_attr = gl::GetAttribLocation(program, CString::new("position").unwrap().as_ptr());
-        println!("vertex size {:?} | 14f32 size {:?}", mem::size_of::<Vertex>(), 14 * mem::size_of::<GLfloat>());
-
-        // pos
-        gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, ptr::null());
-        // uvs
-        gl::EnableVertexAttribArray(1);
-        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(3 * mem::size_of::<f32>()));
-        // normal
-        gl::EnableVertexAttribArray(2);
-        gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(5 * mem::size_of::<f32>()));
-        // tangent
-        gl::EnableVertexAttribArray(3);
-        gl::VertexAttribPointer(3, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(8 * mem::size_of::<f32>()));
-        // binormal
-        gl::EnableVertexAttribArray(4);
-        gl::VertexAttribPointer(4, 3, gl::FLOAT, gl::FALSE as GLboolean, mem::size_of::<Vertex>() as i32, mem::transmute(11 * mem::size_of::<f32>()));
-
-
-        // gl::EnableVertexAttribArray(1);
-        // gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(3 * mem::size_of::<GLfloat>()));
-        //
-        // gl::EnableVertexAttribArray(2);
-        // gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE as GLboolean, (8 * mem::size_of::<GLfloat>()) as i32, mem::transmute(5 * mem::size_of::<GLfloat>()));
-
-        // gl::BindVertexArray(0);
 
     }
 
@@ -235,39 +188,30 @@ fn main() {
             // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
             let view_matrix = camera.get_look_at_matrix();
 
-            normal_map.bind(gl::TEXTURE0);
-            shader.set_uniform_1i("normalMap", 0);
+            // diffuse_map.bind(gl::TEXTURE0);
+            shader.set_uniform_1i("diffuseMap", 0);
 
-            diffuse_map.bind(gl::TEXTURE1);
-            shader.set_uniform_1i("diffuseMap", 1);
+            // specular_map.bind(gl::TEXTURE1);
+            shader.set_uniform_1i("specularMap", 1);
 
-            specular_map.bind(gl::TEXTURE2);
-            shader.set_uniform_1i("specularMap", 2);
-
+            // normal_map.bind(gl::TEXTURE2);
+            shader.set_uniform_1i("normalMap", 2);
 
             shader.set_uniform_matrix4fv("projection", projection_matrix);
             shader.set_uniform_matrix4fv("view", view_matrix);
 
-            let ligh_pos = Vec3::new(0.0, 5.0, 5.0);
+            let ligh_pos = Vec3::new(0.0, 5.0, 20.0);
             shader.set_uniform_3f("lightPos", ligh_pos);
             shader.set_uniform_3f("viewPos", camera.position);
 
-            gl::BindVertexArray(vao);
-
             for entity in &mut entities {
 
-                // entity.rotation.y += 5.0 * 0.16;
+                entity.rotation.y += 5.0 * 0.16;
                 // entity.rotation.z += 5.0 * 0.16;
 
                 shader.set_uniform_matrix4fv("model", entity.get_model_matrix());
-                // Draw cube
-                // gl::DrawArrays(gl::TRIANGLES, 0, 36);
-                gl::DrawElements(gl::TRIANGLES, model.indices.len() as i32, gl::UNSIGNED_INT, ptr::null());
-
+                model.draw();
             }
-
-            gl::BindVertexArray(0);
-
         }
 
         window.swap_buffers().unwrap();
@@ -318,13 +262,6 @@ fn main() {
             }
         }
 
-    }
-
-    // Cleanup - OpenGL memory dealocation
-    unsafe {
-        gl::DeleteBuffers(1, &vbo);
-        gl::DeleteBuffers(1, &ebo);
-        gl::DeleteVertexArrays(1, &vao);
     }
 }
 

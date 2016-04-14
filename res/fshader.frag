@@ -1,8 +1,8 @@
 #version 330 core
 
-uniform sampler2D normalMap;
 uniform sampler2D diffuseMap;
 uniform sampler2D specularMap;
+uniform sampler2D normalMap;
 
 uniform vec3 lightPos;
 
@@ -17,9 +17,6 @@ in VS_OUT {
     vec3 TangentFragPos;
 } fs_in;
 
-float ambientStrength = 0.1f;
-float specularStrength = 0.5f;
-//
 // vec3 lightColor = vec3(1.0, 1.0, 1.0);
 // vec3 objectColor = vec3(0.5, 0.0, 0.5);
 
@@ -40,7 +37,7 @@ void main() {
   vec3 col = texture(diffuseMap, fs_in.TexCoords).rgb;
 
   // ambient
-  vec3 ambient = ambientStrength * col;
+  vec3 ambient = 0.1 * col;
 
   // diffuse
   vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
@@ -53,8 +50,8 @@ void main() {
   vec3 halfwayDir = normalize(lightDir + viewDir);
   float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
 
-  // vec3 specular = vec3(specularStrength) * spec;
-  vec3 specular = vec3(specularStrength) * spec * vec3(texture(specularMap, fs_in.TexCoords));
+  // vec3 specular = vec3(0.5) * spec;
+  vec3 specular = vec3(0.5) * spec * vec3(texture(specularMap, fs_in.TexCoords));
 
   // float distance = length(lightPos - fs_in.FragPos);
   // float attenuation = 1.0f / (constant + linear * distance + quadratic * (distance * distance));
