@@ -21,7 +21,8 @@ use self::tobj::*;
 use texture::Texture;
 
 pub struct Modell {
-    meshes: Vec<Meshh>
+    meshes: Vec<Meshh>,
+    textures: HashMap<String, Texture>,
     // materials and other stuff
 }
 
@@ -31,9 +32,9 @@ struct Meshh {
     vao: u32,
     vbo: u32,
     ebo: u32,
-    albedo: Option<Texture>,
-    specular: Option<Texture>,
-    normal: Option<Texture>,
+    albedo: Option<String>,
+    specular: Option<String>,
+    normal: Option<String>,
     // materials and stuff
 }
 
@@ -59,6 +60,100 @@ impl Modell {
         let mut meshes: Vec<Meshh> = Vec::new();
 
         let mut textures: HashMap<String, Texture> = HashMap::new();
+
+        for m in materials.iter() {
+            let material = m.clone();
+
+            // diffuse
+            if material.diffuse_texture.len() > 0 {
+
+                let texture = match textures.get(&material.diffuse_texture) {
+                    Some(_) => None,
+                    None => {
+                        let mut path = String::new();
+                        path.push_str(folder_path);
+                        path.push_str(material.diffuse_texture.as_str());
+                        Some(Texture::new(path.as_str(), 4.0))
+                    },
+                };
+
+                match texture {
+                    Some(t) => {
+                        textures.insert(material.diffuse_texture, t);
+                    },
+                    None => (),
+                };
+
+            }
+
+            // specular
+            if material.specular_texture.len() > 0 {
+                let texture = match textures.get(&material.specular_texture) {
+                    Some(_) => None,
+                    None => {
+                        let mut path = String::new();
+                        path.push_str(folder_path);
+                        path.push_str(material.specular_texture.as_str());
+                        Some(Texture::new(path.as_str(), 4.0))
+                    },
+                };
+
+                match texture {
+                    Some(t) => {
+                        textures.insert(material.specular_texture, t);
+                    },
+                    None => (),
+                };
+
+            }
+
+            let mut normal_path = String::new();
+            for (k, v) in &material.unknown_param {
+                if k == "map_Bump" {
+                    normal_path = v.clone();
+                    break;
+                }
+            }
+
+            // normal
+            // bump
+            if normal_path.len() > 0 {
+                let texture = match textures.get(&normal_path) {
+                    Some(_) => None,
+                    None => {
+                        let mut path = String::new();
+                        path.push_str(folder_path);
+                        path.push_str(normal_path.as_str());
+                        Some(Texture::new(path.as_str(), 4.0))
+                    },
+                };
+
+                match texture {
+                    Some(t) => {
+                        textures.insert(normal_path, t);
+                    },
+                    None => (),
+                };
+            } else if material.normal_texture.len() > 0 {
+                let texture = match textures.get(&material.normal_texture) {
+                    Some(_) => None,
+                    None => {
+                        let mut path = String::new();
+                        path.push_str(folder_path);
+                        path.push_str(material.normal_texture.as_str());
+                        Some(Texture::new(path.as_str(), 4.0))
+                    },
+                };
+
+                match texture {
+                    Some(t) => {
+                        textures.insert(material.normal_texture, t);
+                    },
+                    None => (),
+                };
+            }
+        }
+
 
         for j in 0..models.len() {
 
@@ -138,23 +233,12 @@ impl Modell {
             // TODO: implement match
             let mut diffuse = None;
             if material.diffuse_texture.len() > 0 {
-
-                let mut path = String::new();
-                path.push_str(folder_path);
-                path.push_str(material.diffuse_texture.as_str());
-                let tex = Texture::new(path.as_str(), 4.0);
-                // textures.insert(material.diffuse_texture, tex);
-                diffuse = Some(tex);
-
+                diffuse = Some(material.diffuse_texture);
             }
 
             let mut specular = None;
             if material.specular_texture.len() > 0 {
-                let mut path = String::new();
-                path.push_str(folder_path);
-                path.push_str(material.specular_texture.as_str());
-                let tex = Texture::new(path.as_str(), 4.0);
-                specular = Some(tex);
+                specular = Some(material.specular_texture);
             }
 
             let mut normal = None;
@@ -165,22 +249,11 @@ impl Modell {
                     break;
                 }
             }
+
             if material.normal_texture.len() > 0 {
-                let mut path = String::new();
-                path.push_str(folder_path);
-                path.push_str(material.normal_texture.as_str());
-                let tex = Texture::new(path.as_str(), 4.0);
-                // textures.insert(material.normal_texture, tex);
-                normal = Some(tex);
+                normal = Some(material.normal_texture);
             } else if normal_path.len() > 0 {
-
-                let mut path = String::new();
-                path.push_str(folder_path);
-                path.push_str(normal_path.as_str());
-                let tex = Texture::new(path.as_str(), 4.0);
-                // textures.insert(normal_path, tex);
-                normal = Some(tex);
-
+                normal = Some(normal_path);
             }
 
             let mut m = Meshh {
@@ -215,7 +288,7 @@ impl Modell {
         //     }
         // }
 
-        Modell { meshes: meshes }
+        Modell { meshes: meshes, textures: textures}
 
         // let f = match File::open(&path) {
         //     Ok(file) => file,
@@ -331,24 +404,33 @@ impl Modell {
 
             // textures
             match self.meshes[i].albedo {
-                None => (),
                 Some(ref albedo) => {
-                    albedo.bind(gl::TEXTURE0);
+                    match self.textures.get(albedo) {
+                        Some(texture) => texture.bind(gl::TEXTURE0),
+                        None => (),
+                    }
                 },
+                None => (),
             };
 
             match self.meshes[i].specular {
-                None => (),
                 Some(ref specular) => {
-                    specular.bind(gl::TEXTURE1);
+                    match self.textures.get(specular) {
+                        Some(texture) => texture.bind(gl::TEXTURE1),
+                        None => (),
+                    }
                 },
+                None => (),
             };
 
             match self.meshes[i].normal {
-                None => (),
                 Some(ref normal) => {
-                    normal.bind(gl::TEXTURE2);
+                    match self.textures.get(normal) {
+                        Some(texture) => texture.bind(gl::TEXTURE2),
+                        None => (),
+                    }
                 },
+                None => (),
             };
 
             self.meshes[i].draw();

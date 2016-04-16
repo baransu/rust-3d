@@ -1,49 +1,49 @@
 newmtl Model001_Material001
-map_Kd Mouth_Diff.tga
-map_Ns Mouth_Norm.tga
+map_Kd Mouth_Diff.png
+map_Ns Mouth_Norm.png
 
 newmtl Model001_Material002
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material003
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material004
-map_Kd Eyelashes_Diff.tga
+map_Kd Eyelashes_Diff.png
 
 newmtl Model001_Material005
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material006
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material007
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material008
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material009
-map_Kd Eye_Diff.tga
-map_Ns Eye_Norm.tga
+map_Kd Eye_Diff.png
+map_Ns Eye_Norm.png
 
 newmtl Model001_Material010
-map_Kd Ves_Diff.tga
-map_Ks Ves_Spec.tga
-map_Ns Ves_Norm.tga
+map_Kd Ves_Diff.png
+map_Ks Ves_Spec.png
+map_Ns Ves_Norm.png
 
 newmtl Model001_Material011
-map_Kd Hair_Diff.tga
-map_Ns Hair_Norm.tga
+map_Kd Hair_Diff.png
+map_Ns Hair_Norm.png
