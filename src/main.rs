@@ -30,58 +30,13 @@ use rand::Rng;
 use engine::shader::Shader;
 use engine::texture::Texture;
 use engine::transform::Transform;
-use engine::model:: { Modell };
+use engine::model::{ Modell };
 use engine::camera::Camera;
+use engine::lights::{ PointLight, DirLight };
 
 use math::mat4::Mat4;
 use math::vec3::Vec3;
 use math::vec2::Vec2;
-
-// static VERTEX_DATA: [GLfloat; 8 * 36] = [
-//                                 //color
-//     -0.5, -0.5, -0.5,  0.0, 0.0, 1.0, 0.0, 0.0,
-//     0.5, -0.5, -0.5,  1.0, 0.0, 1.0, 0.0, 0.0,
-//     0.5,  0.5, -0.5,  1.0, 1.0, 1.0, 0.0, 0.0,
-//     0.5,  0.5, -0.5,  1.0, 1.0, 1.0, 0.0, 0.0,
-//     -0.5,  0.5, -0.5,  0.0, 1.0, 1.0, 0.0, 0.0,
-//     -0.5, -0.5, -0.5,  0.0, 0.0, 1.0, 0.0, 0.0,
-//
-//     -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0, 0.0,
-//     0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 1.0, 0.0,
-//     0.5,  0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 0.0,
-//     0.5,  0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 0.0,
-//     -0.5,  0.5,  0.5,  0.0, 1.0, 1.0, 1.0, 0.0,
-//     -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0, 0.0,
-//
-//     -0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 0.0,
-//     -0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 1.0, 0.0,
-//     -0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 0.0,
-//     -0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 0.0,
-//     -0.5, -0.5,  0.5,  0.0, 0.0, 0.0, 1.0, 0.0,
-//     -0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 0.0,
-//
-//     0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 1.0,
-//     0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 1.0, 1.0,
-//     0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 1.0,
-//     0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0, 1.0,
-//     0.5, -0.5,  0.5,  0.0, 0.0, 0.0, 1.0, 1.0,
-//     0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 1.0, 1.0,
-//
-//     -0.5, -0.5, -0.5,  0.0, 1.0, 1.0, 0.0, 1.0,
-//     0.5, -0.5, -0.5,  1.0, 1.0, 1.0, 0.0, 1.0,
-//     0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 0.0, 1.0,
-//     0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 0.0, 1.0,
-//     -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 0.0, 1.0,
-//     -0.5, -0.5, -0.5,  0.0, 1.0, 1.0, 0.0, 1.0,
-//
-//     -0.5,  0.5, -0.5,  0.0, 1.0, 0.0, 0.0, 1.0,
-//     0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 0.0, 1.0,
-//     0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 0.0, 1.0,
-//     0.5,  0.5,  0.5,  1.0, 0.0, 0.0, 0.0, 1.0,
-//     -0.5,  0.5,  0.5,  0.0, 0.0, 0.0, 0.0, 1.0,
-//     -0.5,  0.5, -0.5,  0.0, 1.0, 0.0, 0.0, 1.0
-//
-// ];
 
 const WIDTH: f32 = 800.0;
 const HEIGHT: f32 = 600.0;
@@ -114,19 +69,20 @@ fn main() {
 
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 20.0), Vec3::new(0.0, 0.0, -90.0));
 
-    let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
-    shader.bind();
-
+    let shader = Shader::new("res/vshader.vert", "res/handpainted.frag");
     // let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
     // let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
     // let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
 
     let mut entities = Vec::new();
 
-    // let model = Mod::new("res/susanne_lowpoly.obj");
-    // let model = Mod::new("res/susanne_highpoly.obj");
-    // let model = Modell::new("res/mouse/mouselowpoly.obj");
-    let model = Modell::new("res/ves/", "Ves.obj");
+    // let model = Mod::new("res/models/", "susanne_lowpoly.obj");
+    // let model = Mod::new("res/models/", "susanne_highpoly.obj");
+    // let model = Modell::new("res/models/mouse/", "mouselowpoly.obj");
+    // let model = Modell::new("res/ves/", "Ves.obj");
+    let model = Modell::new("res/models/", "column.obj");
+
+    let mut forward = true;
 
     // for _ in 0..1 {
     //
@@ -149,6 +105,31 @@ fn main() {
     // }
 
     entities.push(Transform::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -5.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -10.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -15.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -20.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -25.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+
+    // dirlight
+    let mut dirLight = DirLight::new(
+        Vec3::new(-0.2, -1.0, -0.3), //direction
+
+        Vec3::new(0.1, 0.1, 0.1), //ambient
+        Vec3::new(0.25, 0.25, 0.25), //diffuse
+        Vec3::new(0.2, 0.2, 0.2) //specular
+    );
+
+    let mut pointLight = PointLight::new(
+        Vec3::new(0.0, 1.0, 3.0), //position
+
+        0.08, //linear
+        0.032, //quadratic
+
+        Vec3::new(0.1, 0.1, 0.1), //ambient
+        Vec3::new(1.0, 1.0, 1.0), //diffuse
+        Vec3::new(1.0, 1.0, 1.0) //specular
+    );
 
     unsafe {
 
@@ -174,8 +155,10 @@ fn main() {
         unsafe {
 
             // Clear the screen to black
-            gl::ClearColor(66.0/255.0, 66.0/255.0, 66.0/255.0, 1.0);
+            gl::ClearColor(44.0/255.0, 44.0/255.0, 44.0/255.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+            shader.bind();
 
             // near - as big as posible (0.1)
             // far - as small as posible (100 - far and small enought)
@@ -200,9 +183,26 @@ fn main() {
             shader.set_uniform_matrix4fv("projection", projection_matrix);
             shader.set_uniform_matrix4fv("view", view_matrix);
 
-            let ligh_pos = Vec3::new(0.0, 5.0, 20.0);
-            shader.set_uniform_3f("lightPos", ligh_pos);
             shader.set_uniform_3f("viewPos", camera.position);
+
+            // directional light
+            shader.set_uniform_3f("dirLight.direction", dirLight.direction);
+            shader.set_uniform_3f("dirLight.ambient", dirLight.ambient);
+            shader.set_uniform_3f("dirLight.diffuse", dirLight.diffuse);
+            shader.set_uniform_3f("dirLight.specular", dirLight.specular);
+
+            // point light
+            // let ligh_pos = Vec3::new(0.0, 2.0, 2.0);
+
+            shader.set_uniform_3f("pointLight.position", pointLight.position);
+
+            shader.set_uniform_3f("pointLight.ambient", pointLight.ambient);
+            shader.set_uniform_3f("pointLight.diffuse", pointLight.diffuse);
+            shader.set_uniform_3f("pointLight.specular", pointLight.specular);
+
+            shader.set_uniform_1f("pointLight.constant", pointLight.constant);
+            shader.set_uniform_1f("pointLight.linear", pointLight.linear);
+            shader.set_uniform_1f("pointLight.quadratic", pointLight.quadratic);
 
             for entity in &mut entities {
 
@@ -211,7 +211,22 @@ fn main() {
 
                 shader.set_uniform_matrix4fv("model", entity.get_model_matrix());
                 model.draw();
+
             }
+
+            if forward && pointLight.position.z > -25.0 {
+                pointLight.position.z -= 5.0 * 0.016;
+            } else if pointLight.position.z < -25.0 {
+                forward = false;
+            }
+
+            if !forward && pointLight.position.z < 0.0 {
+                pointLight.position.z += 5.0 * 0.016;
+            } else if pointLight.position.z > 0.0 {
+                forward = true;
+            }
+
+            pointLight.draw(projection_matrix, view_matrix);
         }
 
         window.swap_buffers().unwrap();

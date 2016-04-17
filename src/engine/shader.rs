@@ -24,7 +24,6 @@ impl Drop for Shader {
     }
 }
 
-// PUBLIC
 impl Shader {
     pub fn new(vertex_shader_path: &str, fragment_shader_path: &str) -> Shader {
         unsafe {
@@ -99,6 +98,13 @@ impl Shader {
         }
     }
 
+    pub fn set_uniform_1f(&self, name: &str, value: f32) {
+        unsafe {
+            let location = self.get_shader_location(name);
+            gl::Uniform1f(location, value);
+        }
+    }
+
     pub fn set_uniform_3f(&self, name: &str, value: Vec3) {
         unsafe {
             let location = self.get_shader_location(name);
@@ -106,9 +112,11 @@ impl Shader {
         }
     }
 
+    // TODO: set camera (projection, view)
+    // TODO: set lights (directional, point)
+
 }
 
-// PRIVATE
 impl Shader {
     unsafe fn compile_shader(src: &str, ty: GLenum) -> GLuint {
         let shader = gl::CreateShader(ty);

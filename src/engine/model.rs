@@ -156,7 +156,6 @@ impl Modell {
 
 
         for j in 0..models.len() {
-
             let mesh = &models[j].mesh;
 
             let mut container: Vec<Vertex> = Vec::new();
@@ -166,8 +165,13 @@ impl Modell {
             for i in 0..mesh.positions.len()/3 as usize {
                 // pos = [x, y, z]
                 let pos = Vec3::new(mesh.positions[i * 3], mesh.positions[i * 3 + 1], mesh.positions[i * 3 + 2]);
+
                 // uv = [x, y]
-                let tex = Vec2::new(mesh.texcoords[i * 2], mesh.texcoords[i * 2 + 1]);
+                let mut tex = Vec2::new(0.0, 0.0);
+                if !mesh.texcoords.is_empty() {
+                    tex = Vec2::new(mesh.texcoords[i * 2], mesh.texcoords[i * 2 + 1]);
+                }
+
                 // normal = [x, y, z]
                 let norm = Vec3::new(mesh.normals[i * 3], mesh.normals[i * 3 + 1], mesh.normals[i * 3 + 2]);
 
