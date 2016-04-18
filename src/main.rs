@@ -15,6 +15,12 @@ use std::ptr;
 // use std::str;
 // use std::cmp;
 
+// use image::{
+//     GenericImage,
+//     ImageBuffer,
+//     imageops
+// };
+
 use glutin::*;
 
 use rand::Rng;
@@ -35,6 +41,7 @@ use engine::camera::Camera;
 use engine::lights::{ PointLight, DirLight };
 
 use math::mat4::Mat4;
+use math::vec4::Vec4;
 use math::vec3::Vec3;
 use math::vec2::Vec2;
 
@@ -80,7 +87,7 @@ fn main() {
 
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 20.0), Vec3::new(0.0, 0.0, -90.0));
 
-    let shader = Shader::new("res/vshader.vert", "res/handpainted.frag");
+    let shader = Shader::new("res/advanced_lightning.vert", "res/advanced_lightning.frag");
     // let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
     // let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
     // let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
@@ -91,7 +98,7 @@ fn main() {
     // let model = Mod::new("res/models/", "susanne_highpoly.obj");
     // let model = Modell::new("res/models/mouse/", "mouselowpoly.obj");
     // let model = Modell::new("res/ves/", "Ves.obj");
-    let model = Modell::new("res/models/", "column.obj");
+    let model = Modell::new("res/models/", "sphere.obj");
 
     let mut forward = true;
 
@@ -121,6 +128,9 @@ fn main() {
     entities.push(Transform::new(Vec3::new(0.0, -5.0, -15.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
     entities.push(Transform::new(Vec3::new(0.0, -5.0, -20.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
     entities.push(Transform::new(Vec3::new(0.0, -5.0, -25.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -30.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -35.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    entities.push(Transform::new(Vec3::new(0.0, -5.0, -40.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
 
     // dir_light
     let dir_light = DirLight::new(
@@ -152,17 +162,22 @@ fn main() {
 
     let framebuffer_shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
 
+    let skybox = Modell::new("res/models/", "cube.obj");
+    let skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
 
-    let mut skybox = Modell::new("res/models/", "cube.obj");
-    let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
+    let u_PreintegratedFG = Texture::new("res/PreintegratedFG.bmp", 4.0);
+    let u_AlbedoMap = Texture::new("res/GunMetal_Albedo.tga", 4.0);
+    let u_SpecularMap = Texture::new("res/GunMetal_Specular.tga", 4.0);
+    let u_GlossMap = Texture::new("res/GunMetal_Gloss.tga", 4.0);
+    let u_NormalMap = Texture::new("res/GunMetal_Normal.tga", 4.0);
 
     let skybox_faces = vec![
-        "res/cubemap_right.png",
-        "res/cubemap_left.png",
-        "res/cubemap_top.png",
-        "res/cubemap_bottom.png",
-        "res/cubemap_back.png",
-        "res/cubemap_front.png"
+        "res/cubemap_right",
+        "res/cubemap_left",
+        "res/cubemap_top",
+        "res/cubemap_bottom",
+        "res/cubemap_back",
+        "res/cubemap_front"
     ];
 
     let mut skybox_texture = 0;
@@ -224,30 +239,39 @@ fn main() {
         gl::GenTextures(1, &mut skybox_texture);
         gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
 
-        for i in 0..skybox_faces.len() {
-            let texture_data = image::open(skybox_faces[i]).expect("Opening image for texture failed");
-            let texture_data = texture_data.to_rgba();
-            println!("loaded: {:?}", skybox_faces[i]);
+        for i in 0..6 {
+            for j in 0..8 {
+                let mut s = String::new();
+                s.push_str("res/cubemap_m0");
+                s.push_str(&j.to_string()[..]);
+                s.push_str("_c0");
+                s.push_str(&i.to_string()[..]);
+                s.push_str(".bmp");
+                println!("loading: {:?}", s);
+                let texture_data = image::open(s).expect("Opening image for texture failed");
+                let texture_data = texture_data.to_rgba();
 
-            gl::TexImage2D(
-                gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
-                0,
-                gl::RGBA as i32,
-                texture_data.width() as i32,
-                texture_data.height() as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                mem::transmute(&texture_data.into_raw()[0])
-            );
+                gl::TexImage2D(
+                    gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+                    j,
+                    gl::RGBA as i32,
+                    texture_data.width() as i32,
+                    texture_data.height() as i32,
+                    0,
+                    gl::RGBA,
+                    gl::UNSIGNED_BYTE,
+                    mem::transmute(&texture_data.into_raw()[0])
+                );
+            }
         }
 
+        gl::GenerateMipmap(gl::TEXTURE_CUBE_MAP);
+
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
-
+        // gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
 
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
@@ -299,67 +323,110 @@ fn main() {
             skybox.draw();
             gl::DepthMask(gl::TRUE);
 
-
             // draw scene
             shader.bind();
 
-            // diffuse_map.bind(gl::TEXTURE0);
-            shader.set_uniform_1i("diffuseMap", 0);
+            // uniforms for vertex shader
+            shader.set_uniform_matrix4fv("sys_ProjectionMatrix", projection_matrix);
+            shader.set_uniform_matrix4fv("sys_ViewMatrix", view_matrix);
 
-            // specular_map.bind(gl::TEXTURE1);
-            shader.set_uniform_1i("specularMap", 1);
+            shader.set_uniform_3f("sys_CameraPosition", camera.position);
 
-            // normal_map.bind(gl::TEXTURE2);
-            shader.set_uniform_1i("normalMap", 2);
 
-            shader.set_uniform_matrix4fv("projection", projection_matrix);
-            shader.set_uniform_matrix4fv("view", view_matrix);
+            // uniforms for fragment shader
 
-            shader.set_uniform_3f("viewPos", camera.position);
+            // u_PreintegratedFG
+            u_PreintegratedFG.bind(gl::TEXTURE0);
+            shader.set_uniform_1i("u_PreintegratedFG", 0);
+
+            //enviro map
+            gl::ActiveTexture(gl::TEXTURE1);
+            gl::BindTexture(gl::TEXTURE_CUBE_MAP, skybox_texture);
+            shader.set_uniform_1i("u_EnvironmentMap", 1);
+
+            // // u_AlbedoMap;
+            // u_AlbedoMap.bind(gl::TEXTURE2);
+            // shader.set_uniform_1i("u_AlbedoMap", 2);
+            // // u_SpecularMap;
+            // u_SpecularMap.bind(gl::TEXTURE3);
+            // shader.set_uniform_1i("u_SpecularMap", 3);
+            // // u_GlossMap;
+            // u_GlossMap.bind(gl::TEXTURE4);
+            // shader.set_uniform_1i("u_GlossMap", 4);
+            // // u_NormalMap;
+            // u_NormalMap.bind(gl::TEXTURE5);
+            // shader.set_uniform_1i("u_NormalMap", 5);
+
+
+            // u_AlbedoColor;
+            // Iron	(0.560, 0.570, 0.580)
+            // Silver	(0.972, 0.960, 0.915)
+            // Aluminum	(0.913, 0.921, 0.925)
+            // Gold	(1.000, 0.766, 0.336)
+            // Copper	(0.955, 0.637, 0.538)
+            // Chromium	(0.550, 0.556, 0.554)
+            // Nickel	(0.660, 0.609, 0.526)
+            // Titanium	(0.542, 0.497, 0.449)
+            // Cobalt	(0.662, 0.655, 0.634)
+            // Platinum	(0.672, 0.637, 0.585)
+            shader.set_uniform_4f("u_AlbedoColor", Vec4::new(0.0, 0.0, 0.0, 1.0));
+
+            // u_SpecularColor;
+            shader.set_uniform_3f("u_SpecularColor", Vec3::new(0.4, 0.4, 0.4));
+
+            // u_UsingAlbedoMap;
+            shader.set_uniform_1f("u_UsingAlbedoMap", 0.0);
+            // u_UsingSpecularMap;
+            shader.set_uniform_1f("u_UsingSpecularMap", 0.0);
+            // u_UsingGlossMap;
+            shader.set_uniform_1f("u_UsingGlossMap", 0.0);
+            // u_UsingNormalMap;
+            shader.set_uniform_1f("u_UsingNormalMap", 0.0);
 
             // directional light
-            shader.set_uniform_3f("dirLight.direction", dir_light.direction);
-            shader.set_uniform_3f("dirLight.ambient", dir_light.ambient);
-            shader.set_uniform_3f("dirLight.diffuse", dir_light.diffuse);
-            shader.set_uniform_3f("dirLight.specular", dir_light.specular);
+            // shader.set_uniform_3f("dirLight.direction", dir_light.direction);
+            // shader.set_uniform_3f("dirLight.ambient", dir_light.ambient);
+            // shader.set_uniform_3f("dirLight.diffuse", dir_light.diffuse);
+            // shader.set_uniform_3f("dirLight.specular", dir_light.specular);
+            //
+            //
+            // // point light
+            shader.set_uniform_4f("u_Light.color", Vec4::new(0.0, 0.0, 0.0, 1.0));
+            shader.set_uniform_3f("u_Light.position", point_light.position);
 
-            // point light
-            // let ligh_pos = Vec3::new(0.0, 2.0, 2.0);
+            shader.set_uniform_1f("u_Light.p0", 0.0);
+            shader.set_uniform_1f("u_Light.p1", 1.0);
 
-            shader.set_uniform_3f("pointLight.position", point_light.position);
+            shader.set_uniform_1f("u_Light.intensity", 0.0);
 
-            shader.set_uniform_3f("pointLight.ambient", point_light.ambient);
-            shader.set_uniform_3f("pointLight.diffuse", point_light.diffuse);
-            shader.set_uniform_3f("pointLight.specular", point_light.specular);
+            shader.set_uniform_3f("u_Light.direction", dir_light.direction);
 
-            shader.set_uniform_1f("pointLight.constant", point_light.constant);
-            shader.set_uniform_1f("pointLight.linear", point_light.linear);
-            shader.set_uniform_1f("pointLight.quadratic", point_light.quadratic);
-
-            for entity in &mut entities {
-
-                entity.rotation.y += 5.0 * 0.16;
+            for (i, entity) in &mut entities.iter().enumerate() {
+                //
+                // entity.rotation.y += 5.0 * 0.16;
                 // entity.rotation.z += 5.0 * 0.16;
 
-                shader.set_uniform_matrix4fv("model", entity.get_model_matrix());
-                model.draw();
+                // u_GlossColor;
+                shader.set_uniform_1f("u_GlossColor", 1.0 - (i as f32 / 10.0));
 
+
+                shader.set_uniform_matrix4fv("sys_ModelMatrix", entity.get_model_matrix());
+                model.draw_without_textures();
             }
-
-            if forward && point_light.position.z > -25.0 {
-                point_light.position.z -= 5.0 * 0.016;
-            } else if point_light.position.z < -25.0 {
-                forward = false;
-            }
-
-            if !forward && point_light.position.z < 0.0 {
-                point_light.position.z += 5.0 * 0.016;
-            } else if point_light.position.z > 0.0 {
-                forward = true;
-            }
-
-            point_light.draw(projection_matrix, view_matrix);
-
+            //
+            // if forward && point_light.position.z > -25.0 {
+            //     point_light.position.z -= 5.0 * 0.016;
+            // } else if point_light.position.z < -25.0 {
+            //     forward = false;
+            // }
+            //
+            // if !forward && point_light.position.z < 0.0 {
+            //     point_light.position.z += 5.0 * 0.016;
+            // } else if point_light.position.z > 0.0 {
+            //     forward = true;
+            // }
+            //
+            // point_light.draw(projection_matrix, view_matrix);
 
             // bind default framebuffer
             gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
@@ -370,10 +437,10 @@ fn main() {
 
             framebuffer_shader.bind();
             gl::BindVertexArray(fbo_quad_vao);
+            gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, fbo_texture);
             gl::DrawArrays(gl::TRIANGLES, 0, 6);
             gl::BindVertexArray(0);
-
 
         }
 
@@ -393,7 +460,6 @@ fn main() {
                     pressed_keys[x as usize] = false;
                 },
                 Event::MouseMoved((x, y)) => {
-                    // let  = pos;
                     let x = x as f32;
                     let y = y as f32;
                     if first_mouse {

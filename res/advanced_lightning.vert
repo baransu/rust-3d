@@ -1,17 +1,18 @@
 #version 330 core
 
 layout(location = 0) in vec4 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 uv;
-layout(location = 3) in vec3 binormal;
-layout(location = 4) in vec3 tangent;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec3 normal;
+layout(location = 3) in vec3 tangent;
+layout(location = 4) in vec3 binormal;
 
 uniform mat4 sys_ProjectionMatrix;
 uniform mat4 sys_ViewMatrix;
 uniform mat4 sys_ModelMatrix;
+
 uniform vec3 sys_CameraPosition;
 
-uniform mat4 u_DepthBiasMVP;
+// uniform mat4 u_DepthBiasMVP;
 
 out DATA
 {
@@ -21,7 +22,7 @@ out DATA
 	vec3 binormal;
 	vec3 tangent;
 	vec3 color;
-	vec4 shadowCoord;
+	// vec4 shadowCoord;
 	vec3 cameraPos;
 } vs_out;
 
@@ -39,5 +40,5 @@ void main()
 	vs_out.color = vec3(1.0);
 	vs_out.cameraPos = sys_CameraPosition;
 
-	vs_out.shadowCoord = u_DepthBiasMVP * pos;
+	// vs_out.shadowCoord = u_DepthBiasMVP * pos;
 }

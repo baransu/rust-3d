@@ -11,6 +11,7 @@ use std::ptr;
 
 use self::math::mat4::Mat4;
 use self::math::vec3::Vec3;
+use self::math::vec4::Vec4;
 
 use self::gl::types::*;
 
@@ -111,6 +112,13 @@ impl Shader {
             gl::Uniform3f(location, value.x, value.y, value.z);
         }
     }
+    pub fn set_uniform_4f(&self, name: &str, value: Vec4) {
+        unsafe {
+            let location = self.get_shader_location(name);
+            gl::Uniform4f(location, value.x, value.y, value.z, value.w);
+        }
+    }
+
 
     // TODO: set camera (projection, view)
     // TODO: set lights (directional, point)

@@ -10,7 +10,7 @@ in DATA
 	vec3 binormal;
 	vec3 tangent;
 	vec3 color;
-	vec4 shadowCoord;
+	// vec4 shadowCoord;
 	vec3 cameraPos;
 } fs_in;
 
@@ -23,7 +23,6 @@ struct Light
 	float p1;
 	vec3 lightVector;
 	float intensity;
-
 };
 
 struct Material
@@ -54,13 +53,12 @@ uniform sampler2D u_SpecularMap;
 uniform sampler2D u_GlossMap;
 uniform sampler2D u_NormalMap;
 
-uniform sampler2DShadow u_ShadowMap;
+// uniform sampler2DShadow u_ShadowMap;
 
 // PBR Static Inputs
 uniform vec4 u_AlbedoColor;
 uniform vec3 u_SpecularColor;
 uniform float u_GlossColor;
-uniform vec3 u_NormalColor;
 
 // PBR Modes
 uniform float u_UsingAlbedoMap;
@@ -71,24 +69,24 @@ uniform float u_UsingNormalMap;
 #define PI 3.1415926535897932384626433832795
 #define GAMMA 2.2
 
-vec2 poissonDisk[16] = vec2[](
-	vec2(-0.94201624, -0.39906216),
-	vec2(0.94558609, -0.76890725),
-	vec2(-0.094184101, -0.92938870),
-	vec2(0.34495938, 0.29387760),
-	vec2(-0.91588581, 0.45771432),
-	vec2(-0.81544232, -0.87912464),
-	vec2(-0.38277543, 0.27676845),
-	vec2(0.97484398, 0.75648379),
-	vec2(0.44323325, -0.97511554),
-	vec2(0.53742981, -0.47373420),
-	vec2(-0.26496911, -0.41893023),
-	vec2(0.79197514, 0.19090188),
-	vec2(-0.24188840, 0.99706507),
-	vec2(-0.81409955, 0.91437590),
-	vec2(0.19984126, 0.78641367),
-	vec2(0.14383161, -0.14100790)
-	);
+// vec2 poissonDisk[16] = vec2[](
+// 	vec2(-0.94201624, -0.39906216),
+// 	vec2(0.94558609, -0.76890725),
+// 	vec2(-0.094184101, -0.92938870),
+// 	vec2(0.34495938, 0.29387760),
+// 	vec2(-0.91588581, 0.45771432),
+// 	vec2(-0.81544232, -0.87912464),
+// 	vec2(-0.38277543, 0.27676845),
+// 	vec2(0.97484398, 0.75648379),
+// 	vec2(0.44323325, -0.97511554),
+// 	vec2(0.53742981, -0.47373420),
+// 	vec2(-0.26496911, -0.41893023),
+// 	vec2(0.79197514, 0.19090188),
+// 	vec2(-0.24188840, 0.99706507),
+// 	vec2(-0.81409955, 0.91437590),
+// 	vec2(0.19984126, 0.78641367),
+// 	vec2(0.14383161, -0.14100790)
+// 	);
 
 Attributes g_Attributes;
 
@@ -278,15 +276,13 @@ void main()
 	// Shadows
 	float bias = 0.005;
 	float visibility = 1.0;
-	for (int i = 0; i < 1; i++)
-	{
-		int index = int(16.0 * random(floor(fs_in.position.xyz * 1000.0), i)) % 16;
-		visibility -= (1.0 / 4.0) * (1.0 - texture(u_ShadowMap, vec3(fs_in.shadowCoord.xy + poissonDisk[index] / 700.0, (fs_in.shadowCoord.z - bias) / fs_in.shadowCoord.w)));
-	}
+	// for (int i = 0; i < 1; i++)
+	// {
+	// 	int index = int(16.0 * random(floor(fs_in.position.xyz * 1000.0), i)) % 16;
+	// 	visibility -= (1.0 / 4.0) * (1.0 - texture(u_ShadowMap, vec3(fs_in.shadowCoord.xy + poissonDisk[index] / 700.0, (fs_in.shadowCoord.z - bias) / fs_in.shadowCoord.w)));
+	// }
 
 	vec3 finalColor = material.albedo.rgb * diffuse.rgb * visibility + (specular + IBL(light, material, eye)) * visibility;
 	finalColor = FinalGamma(finalColor);
 	color = vec4(finalColor, material.albedo.a);
 }
-Status API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Contact Help

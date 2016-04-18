@@ -441,6 +441,13 @@ impl Modell {
         }
     }
 
+    pub unsafe fn draw_without_textures(&self) {
+        for i in 0..self.meshes.len() {
+            //TODO: shaders
+            self.meshes[i].draw();
+        }
+    }
+
 }
 
 impl Drop for Meshh {
