@@ -15,12 +15,6 @@ use std::ptr;
 // use std::str;
 // use std::cmp;
 
-// use image::{
-//     GenericImage,
-//     ImageBuffer,
-//     imageops
-// };
-
 use glutin::*;
 
 use rand::Rng;
@@ -122,15 +116,10 @@ fn main() {
     //     entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
     // }
 
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -5.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -10.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -15.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -20.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -25.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -30.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -35.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
-    entities.push(Transform::new(Vec3::new(0.0, -5.0, -40.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+    for i in 0..10 {
+        entities.push(Transform::new(Vec3::new(0.0, -5.0, -2.5 * i as f32), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
+
+    }
 
     // dir_light
     let dir_light = DirLight::new(
@@ -239,34 +228,48 @@ fn main() {
         gl::GenTextures(1, &mut skybox_texture);
         gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
 
-        for i in 0..6 {
-            for j in 0..8 {
-                let mut s = String::new();
-                s.push_str("res/cubemap_m0");
-                s.push_str(&j.to_string()[..]);
-                s.push_str("_c0");
-                s.push_str(&i.to_string()[..]);
-                s.push_str(".bmp");
-                println!("loading: {:?}", s);
-                let texture_data = image::open(s).expect("Opening image for texture failed");
-                let texture_data = texture_data.to_rgba();
+        for i in 0..skybox_faces.len() {
+            let mut s = String::new();
+            s.push_str(skybox_faces[i]);
+            s.push_str("0.png");
+            println!("loading: {:?}", s);
+            let texture_data = image::open(s).expect("Opening image for texture failed");
+            let texture_data = texture_data.to_rgba();
 
-                gl::TexImage2D(
-                    gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
-                    j,
-                    gl::RGBA as i32,
-                    texture_data.width() as i32,
-                    texture_data.height() as i32,
-                    0,
-                    gl::RGBA,
-                    gl::UNSIGNED_BYTE,
-                    mem::transmute(&texture_data.into_raw()[0])
-                );
-            }
+            gl::TexImage2D(
+                gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+                0,
+                gl::RGBA as i32,
+                texture_data.width() as i32,
+                texture_data.height() as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                mem::transmute(&texture_data.into_raw()[0])
+            );
+            // for j in 1..10 {
+            //     let mut s = String::new();
+            //     s.push_str(skybox_faces[i]);
+            //     s.push_str(&j.to_string()[..]);
+            //     s.push_str(".png");
+            //     println!("loading: {:?}", s);
+            //     let texture_data = image::open(s).expect("Opening image for texture failed");
+            //     let texture_data = texture_data.to_rgba();
+            //     gl::TexSubImage2D(
+            //         gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+            //         j,
+            //         0,
+            //         0,
+            //         texture_data.width() as i32,
+            //         texture_data.height() as i32,
+            //         gl::RGBA,
+            //         gl::UNSIGNED_BYTE,
+            //         mem::transmute(&texture_data.into_raw()[0])
+            //     ); // Copy data to the second mipmap
+            // }
         }
 
         gl::GenerateMipmap(gl::TEXTURE_CUBE_MAP);
-
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
