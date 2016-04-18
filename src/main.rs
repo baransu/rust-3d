@@ -38,8 +38,19 @@ use math::mat4::Mat4;
 use math::vec3::Vec3;
 use math::vec2::Vec2;
 
-const WIDTH: f32 = 800.0;
-const HEIGHT: f32 = 600.0;
+const WIDTH: f32 = 1280.0;
+const HEIGHT: f32 = 720.0;
+
+static QUAD_VERTICES: [f32; 24] = [
+    // Positions   // TexCoords
+    -1.0,  1.0,  0.0, 1.0,
+    -1.0, -1.0,  0.0, 0.0,
+     1.0, -1.0,  1.0, 0.0,
+
+    -1.0,  1.0,  0.0, 1.0,
+     1.0, -1.0,  1.0, 0.0,
+     1.0,  1.0,  1.0, 1.0
+];
 
 fn main() {
 
@@ -111,8 +122,8 @@ fn main() {
     entities.push(Transform::new(Vec3::new(0.0, -5.0, -20.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
     entities.push(Transform::new(Vec3::new(0.0, -5.0, -25.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0)));
 
-    // dirlight
-    let mut dirLight = DirLight::new(
+    // dir_light
+    let dir_light = DirLight::new(
         Vec3::new(-0.2, -1.0, -0.3), //direction
 
         Vec3::new(0.1, 0.1, 0.1), //ambient
@@ -120,23 +131,125 @@ fn main() {
         Vec3::new(0.2, 0.2, 0.2) //specular
     );
 
-    let mut pointLight = PointLight::new(
+    let mut point_light = PointLight::new(
         Vec3::new(0.0, 1.0, 3.0), //position
 
         0.08, //linear
         0.032, //quadratic
 
         Vec3::new(0.1, 0.1, 0.1), //ambient
-        Vec3::new(1.0, 1.0, 1.0), //diffuse
+        Vec3::new(1.0, 0.0, 1.0), //diffuse
         Vec3::new(1.0, 1.0, 1.0) //specular
     );
 
-    unsafe {
+    let mut fbo = 0;
+    let mut rbo = 0;
 
-        gl::Enable(gl::DEPTH_TEST);
+    let mut fbo_quad_vao = 0;
+    let mut fbo_quad_vbo = 0;
+
+    let mut fbo_texture = 0;
+
+    let framebuffer_shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
+
+
+    let mut skybox = Modell::new("res/models/", "cube.obj");
+    let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
+
+    let skybox_faces = vec![
+        "res/cubemap_right.png",
+        "res/cubemap_left.png",
+        "res/cubemap_top.png",
+        "res/cubemap_bottom.png",
+        "res/cubemap_back.png",
+        "res/cubemap_front.png"
+    ];
+
+    let mut skybox_texture = 0;
+
+    unsafe {
         // gl::Enable(gl::CULL_FACE);
         // gl::FrontFace(gl::CW);
         // gl::CullFace(gl::FRONT_AND_BACK);
+
+        // setting framebuffer
+        gl::GenFramebuffers(1, &mut fbo);
+        gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+
+        // texture
+        gl::GenTextures(1, &mut fbo_texture);
+        gl::BindTexture(gl::TEXTURE_2D, fbo_texture);
+        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, WIDTH as i32, HEIGHT as i32, 0, gl::RGB, gl::UNSIGNED_BYTE, ptr::null());
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+
+        gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, fbo_texture, 0);
+
+        // renderbuffer
+        gl::GenRenderbuffers(1, &mut rbo);
+        gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
+
+        gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, WIDTH as i32, HEIGHT as i32);
+        gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
+
+        gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_STENCIL_ATTACHMENT, gl::RENDERBUFFER, rbo);
+
+        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+            panic!("Framebuffer is not complete!");
+        }
+
+        gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
+        // framebuffer quad
+        gl::GenVertexArrays(1, &mut fbo_quad_vao);
+        gl::GenBuffers(1, &mut fbo_quad_vbo);
+
+        gl::BindVertexArray(fbo_quad_vao);
+
+        // Create a Vertex Buffer Object and copy the vertex data to it
+        gl::BindBuffer(gl::ARRAY_BUFFER, fbo_quad_vbo);
+        gl::BufferData(gl::ARRAY_BUFFER, (QUAD_VERTICES.len() * mem::size_of::<f32>()) as GLsizeiptr, mem::transmute(&QUAD_VERTICES[0]), gl::STATIC_DRAW);
+
+        // pos
+        gl::EnableVertexAttribArray(0);
+        gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE as GLboolean, 4 * mem::size_of::<f32>() as i32, ptr::null());
+        // uvs
+        gl::EnableVertexAttribArray(1);
+        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE as GLboolean, 4 * mem::size_of::<f32>() as i32, mem::transmute(2 * mem::size_of::<f32>()));
+
+        gl::BindVertexArray(0);
+
+        // SKYBOX TEXTURE
+        gl::GenTextures(1, &mut skybox_texture);
+        gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
+
+        for i in 0..skybox_faces.len() {
+            let texture_data = image::open(skybox_faces[i]).expect("Opening image for texture failed");
+            let texture_data = texture_data.to_rgba();
+            println!("loaded: {:?}", skybox_faces[i]);
+
+            gl::TexImage2D(
+                gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+                0,
+                gl::RGBA as i32,
+                texture_data.width() as i32,
+                texture_data.height() as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                mem::transmute(&texture_data.into_raw()[0])
+            );
+        }
+
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
+
+
+        gl::BindTexture(gl::TEXTURE_2D, 0);
 
     }
 
@@ -154,11 +267,13 @@ fn main() {
 
         unsafe {
 
-            // Clear the screen to black
+            // bind offscreen framebuffer
+            gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+
             gl::ClearColor(44.0/255.0, 44.0/255.0, 44.0/255.0, 1.0);
+            gl::Enable(gl::DEPTH_TEST);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            shader.bind();
 
             // near - as big as posible (0.1)
             // far - as small as posible (100 - far and small enought)
@@ -170,6 +285,23 @@ fn main() {
             // camera.position.z = (angle.sin() * radius) as f32;
             // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
             let view_matrix = camera.get_look_at_matrix();
+
+            gl::DepthMask(gl::FALSE);
+            skybox_shader.bind();
+
+            skybox_shader.set_uniform_matrix4fv("projection", projection_matrix);
+            skybox_shader.set_uniform_matrix4fv("view", view_matrix);
+
+            gl::ActiveTexture(gl::TEXTURE0);
+            skybox_shader.set_uniform_1i("skybox", 0);
+
+            gl::BindTexture(gl::TEXTURE_CUBE_MAP, skybox_texture);
+            skybox.draw();
+            gl::DepthMask(gl::TRUE);
+
+
+            // draw scene
+            shader.bind();
 
             // diffuse_map.bind(gl::TEXTURE0);
             shader.set_uniform_1i("diffuseMap", 0);
@@ -186,23 +318,23 @@ fn main() {
             shader.set_uniform_3f("viewPos", camera.position);
 
             // directional light
-            shader.set_uniform_3f("dirLight.direction", dirLight.direction);
-            shader.set_uniform_3f("dirLight.ambient", dirLight.ambient);
-            shader.set_uniform_3f("dirLight.diffuse", dirLight.diffuse);
-            shader.set_uniform_3f("dirLight.specular", dirLight.specular);
+            shader.set_uniform_3f("dirLight.direction", dir_light.direction);
+            shader.set_uniform_3f("dirLight.ambient", dir_light.ambient);
+            shader.set_uniform_3f("dirLight.diffuse", dir_light.diffuse);
+            shader.set_uniform_3f("dirLight.specular", dir_light.specular);
 
             // point light
             // let ligh_pos = Vec3::new(0.0, 2.0, 2.0);
 
-            shader.set_uniform_3f("pointLight.position", pointLight.position);
+            shader.set_uniform_3f("pointLight.position", point_light.position);
 
-            shader.set_uniform_3f("pointLight.ambient", pointLight.ambient);
-            shader.set_uniform_3f("pointLight.diffuse", pointLight.diffuse);
-            shader.set_uniform_3f("pointLight.specular", pointLight.specular);
+            shader.set_uniform_3f("pointLight.ambient", point_light.ambient);
+            shader.set_uniform_3f("pointLight.diffuse", point_light.diffuse);
+            shader.set_uniform_3f("pointLight.specular", point_light.specular);
 
-            shader.set_uniform_1f("pointLight.constant", pointLight.constant);
-            shader.set_uniform_1f("pointLight.linear", pointLight.linear);
-            shader.set_uniform_1f("pointLight.quadratic", pointLight.quadratic);
+            shader.set_uniform_1f("pointLight.constant", point_light.constant);
+            shader.set_uniform_1f("pointLight.linear", point_light.linear);
+            shader.set_uniform_1f("pointLight.quadratic", point_light.quadratic);
 
             for entity in &mut entities {
 
@@ -214,19 +346,35 @@ fn main() {
 
             }
 
-            if forward && pointLight.position.z > -25.0 {
-                pointLight.position.z -= 5.0 * 0.016;
-            } else if pointLight.position.z < -25.0 {
+            if forward && point_light.position.z > -25.0 {
+                point_light.position.z -= 5.0 * 0.016;
+            } else if point_light.position.z < -25.0 {
                 forward = false;
             }
 
-            if !forward && pointLight.position.z < 0.0 {
-                pointLight.position.z += 5.0 * 0.016;
-            } else if pointLight.position.z > 0.0 {
+            if !forward && point_light.position.z < 0.0 {
+                point_light.position.z += 5.0 * 0.016;
+            } else if point_light.position.z > 0.0 {
                 forward = true;
             }
 
-            pointLight.draw(projection_matrix, view_matrix);
+            point_light.draw(projection_matrix, view_matrix);
+
+
+            // bind default framebuffer
+            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            // draw offscreen texture
+            gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+            gl::Disable(gl::DEPTH_TEST);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+
+            framebuffer_shader.bind();
+            gl::BindVertexArray(fbo_quad_vao);
+            gl::BindTexture(gl::TEXTURE_2D, fbo_texture);
+            gl::DrawArrays(gl::TRIANGLES, 0, 6);
+            gl::BindVertexArray(0);
+
+
         }
 
         window.swap_buffers().unwrap();
@@ -276,7 +424,14 @@ fn main() {
                 _ => (),
             }
         }
+    }
 
+    unsafe {
+        gl::DeleteFramebuffers(1, &mut fbo);
+        gl::DeleteFramebuffers(1, &mut rbo);
+
+        gl::DeleteFramebuffers(1, &mut fbo_quad_vao);
+        gl::DeleteFramebuffers(1, &mut fbo_quad_vbo);
     }
 }
 
