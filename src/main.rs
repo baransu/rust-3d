@@ -121,6 +121,8 @@ fn main() {
 
     }
 
+    let mut plane_transform = Transform::new(Vec3::new(-10.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
+    let plane = Modell::new("res/models/mouse/", "mouselowpoly.obj");
     // dir_light
     let dir_light = DirLight::new(
         Vec3::new(-0.2, -1.0, -0.3), //direction
@@ -155,10 +157,10 @@ fn main() {
     let skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
 
     let u_PreintegratedFG = Texture::new("res/PreintegratedFG.bmp", 4.0);
-    let u_AlbedoMap = Texture::new("res/GunMetal_Albedo.tga", 4.0);
-    let u_SpecularMap = Texture::new("res/GunMetal_Specular.tga", 4.0);
-    let u_GlossMap = Texture::new("res/GunMetal_Gloss.tga", 4.0);
-    let u_NormalMap = Texture::new("res/GunMetal_Normal.tga", 4.0);
+    let u_AlbedoMap = Texture::new("res/models/mouse/mouseAlbedo.png", 4.0);
+    let u_SpecularMap = Texture::new("res/models/mouse/mouseSpecular.png", 4.0);
+    let u_GlossMap = Texture::new("res/models/mouse/mouseRoughness.png", 4.0);
+    let u_NormalMap = Texture::new("res/models/mouse/mouseNormal.png", 4.0);
 
     let skybox_faces = vec![
         "res/cubemap_right",
@@ -229,52 +231,43 @@ fn main() {
         gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
 
         for i in 0..skybox_faces.len() {
-            let mut s = String::new();
-            s.push_str(skybox_faces[i]);
-            s.push_str("0.png");
-            println!("loading: {:?}", s);
-            let texture_data = image::open(s).expect("Opening image for texture failed");
-            let texture_data = texture_data.to_rgba();
+            for j in 0..8 {
+                let mut s = String::new();
+                s.push_str("res/cubemap/cubemap._m0");
+                s.push_str(&j.to_string()[..]);
+                s.push_str("_c0");
+                if i == 0 {
+                    s.push_str("1");
+                } else if i == 1 {
+                    s.push_str("0");
+                } else {
+                    s.push_str(&i.to_string()[..]);
+                }
+                s.push_str(".bmp");
+                println!("loading: {:?}", s);
+                let texture_data = image::open(s).expect("Opening image for texture failed");
+                let texture_data = texture_data.to_rgba();
 
-            gl::TexImage2D(
-                gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
-                0,
-                gl::RGBA as i32,
-                texture_data.width() as i32,
-                texture_data.height() as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                mem::transmute(&texture_data.into_raw()[0])
-            );
-            // for j in 1..10 {
-            //     let mut s = String::new();
-            //     s.push_str(skybox_faces[i]);
-            //     s.push_str(&j.to_string()[..]);
-            //     s.push_str(".png");
-            //     println!("loading: {:?}", s);
-            //     let texture_data = image::open(s).expect("Opening image for texture failed");
-            //     let texture_data = texture_data.to_rgba();
-            //     gl::TexSubImage2D(
-            //         gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
-            //         j,
-            //         0,
-            //         0,
-            //         texture_data.width() as i32,
-            //         texture_data.height() as i32,
-            //         gl::RGBA,
-            //         gl::UNSIGNED_BYTE,
-            //         mem::transmute(&texture_data.into_raw()[0])
-            //     ); // Copy data to the second mipmap
-            // }
+                gl::TexImage2D(
+                    gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+                    j,
+                    gl::RGBA as i32,
+                    texture_data.width() as i32,
+                    texture_data.height() as i32,
+                    0,
+                    gl::RGBA,
+                    gl::UNSIGNED_BYTE,
+                    mem::transmute(&texture_data.into_raw()[0])
+                );
+            }
         }
 
-        gl::GenerateMipmap(gl::TEXTURE_CUBE_MAP);
+        // gl::GenerateMipmap(gl::TEXTURE_CUBE_MAP);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
         gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-        // gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
+        gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
 
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
@@ -416,6 +409,32 @@ fn main() {
                 shader.set_uniform_matrix4fv("sys_ModelMatrix", entity.get_model_matrix());
                 model.draw_without_textures();
             }
+
+            // u_AlbedoMap;
+            u_AlbedoMap.bind(gl::TEXTURE2);
+            shader.set_uniform_1i("u_AlbedoMap", 2);
+            // u_SpecularMap;
+            u_SpecularMap.bind(gl::TEXTURE3);
+            shader.set_uniform_1i("u_SpecularMap", 3);
+            // u_GlossMap;
+            u_GlossMap.bind(gl::TEXTURE4);
+            shader.set_uniform_1i("u_GlossMap", 4);
+            // u_NormalMap;
+            u_NormalMap.bind(gl::TEXTURE5);
+            shader.set_uniform_1i("u_NormalMap", 5);
+
+            // u_UsingAlbedoMap;
+            shader.set_uniform_1f("u_UsingAlbedoMap", 1.0);
+            // u_UsingSpecularMap;
+            shader.set_uniform_1f("u_UsingSpecularMap", 1.0);
+            // u_UsingGlossMap;
+            shader.set_uniform_1f("u_UsingGlossMap", 1.0);
+            // u_UsingNormalMap;
+            shader.set_uniform_1f("u_UsingNormalMap", 1.0);
+
+            shader.set_uniform_matrix4fv("sys_ModelMatrix", plane_transform.get_model_matrix());
+            plane.draw_without_textures();
+
             //
             // if forward && point_light.position.z > -25.0 {
             //     point_light.position.z -= 5.0 * 0.016;

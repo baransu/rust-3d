@@ -36,7 +36,7 @@ void main()
 	vs_out.normal = model * normal;
 	vs_out.binormal = model * binormal;
 	vs_out.tangent = model * tangent;
-	vs_out.uv = uv;
+	vs_out.uv = vec2(uv.x, 1.0 - uv.y);
 	vs_out.color = vec3(1.0);
 	vs_out.cameraPos = sys_CameraPosition;
 

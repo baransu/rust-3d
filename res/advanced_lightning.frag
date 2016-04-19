@@ -230,7 +230,7 @@ float random(vec3 seed, int i)
 vec3 NormalMap()
 {
 	mat3 toWorld = mat3(g_Attributes.binormal, g_Attributes.tangent, g_Attributes.normal);
-	vec3 normalMap = texture(u_NormalMap, fs_in.uv).bgr * 2.0 - 1.0;
+	vec3 normalMap = texture(u_NormalMap, fs_in.uv).rgb * 2.0 - 1.0;
 	normalMap = toWorld * normalMap.rgb;
 	normalMap = normalize(normalMap);
 	return normalMap;
