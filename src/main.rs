@@ -161,7 +161,6 @@ fn main() {
     let u_SpecularMap = Texture::new("res/models/mouse/mouseSpecular.png", 4.0);
     let u_GlossMap = Texture::new("res/models/mouse/mouseRoughness.png", 4.0);
     let u_NormalMap = Texture::new("res/models/mouse/mouseNormal.png", 4.0);
-
     let skybox_faces = vec![
         "res/cubemap_right",
         "res/cubemap_left",
@@ -177,7 +176,6 @@ fn main() {
         // gl::Enable(gl::CULL_FACE);
         // gl::FrontFace(gl::CW);
         // gl::CullFace(gl::FRONT_AND_BACK);
-
         // setting framebuffer
         gl::GenFramebuffers(1, &mut fbo);
         gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
