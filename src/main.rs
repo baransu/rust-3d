@@ -38,8 +38,8 @@ use math::mat4::Mat4;
 use math::vec3::Vec3;
 use math::vec2::Vec2;
 
-const WIDTH: f32 = 1280.0;
-const HEIGHT: f32 = 720.0;
+const WIDTH: f32 = 800.0;
+const HEIGHT: f32 = 600.0;
 
 static QUAD_VERTICES: [f32; 24] = [
     // Positions   // TexCoords
