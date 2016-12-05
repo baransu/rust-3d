@@ -463,4 +463,26 @@ fn input(pressed_keys: &[bool; 1024], camera: &mut Camera) {
     if pressed_keys[VirtualKeyCode::E as usize] {
         camera.position = camera.position + Vec3::new(0.0, camera_speed, 0.0);
     }
+
+    /* CAMERA ROTATION VIA KEYBOARD */
+
+    // up rotation
+    if pressed_keys[VirtualKeyCode::Z as usize] {
+        camera.rotation = Vec3::new(camera.rotation.x, camera.rotation.y + camera_speed, camera.rotation.z);
+    }
+
+    // down rotation
+    if pressed_keys[VirtualKeyCode::X as usize] {
+        camera.rotation = Vec3::new(camera.rotation.x, camera.rotation.y - camera_speed, camera.rotation.z);
+    }
+
+    // left rotation
+    if pressed_keys[VirtualKeyCode::C as usize] {
+        camera.rotation = Vec3::new(camera.rotation.x, camera.rotation.y, camera.rotation.z - camera_speed);
+    }
+
+    // right rotation
+    if pressed_keys[VirtualKeyCode::V as usize] {
+        camera.rotation = Vec3::new(camera.rotation.x, camera.rotation.y, camera.rotation.z + camera_speed);
+    }
 }
