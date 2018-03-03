@@ -23,7 +23,6 @@ struct Light
 	float p1;
 	vec3 lightVector;
 	float intensity;
-
 };
 
 struct Material

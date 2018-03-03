@@ -8,8 +8,8 @@ name = "engine"
 path = "lib.rs"
 
 [dependencies]
-tobj = "0.1.1"
-image = "0.8.0"
+tobj = "0.1.6"
+image = "0.17.0"
 
 [dependencies.opengl]
 path = "../opengl"
