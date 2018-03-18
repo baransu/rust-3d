@@ -14,6 +14,7 @@ use self::math::vec3::Vec3;
 
 use self::gl::types::*;
 
+#[derive(Debug)]
 pub struct Shader {
     pub program: u32
 }

@@ -27,6 +27,7 @@ use rand::Rng;
 
 
 // local
+use engine::framebuffer::Framebuffer;
 use engine::shader::Shader;
 use engine::texture::Texture;
 use engine::transform::Transform;
@@ -41,45 +42,6 @@ use math::vec2::Vec2;
 
 const WIDTH: f32 = 800.0;
 const HEIGHT: f32 = 600.0;
-
-static QUAD_VERTICES: [f32; 24] = [
-    // Positions   // TexCoords
-    -1.0,
-    1.0,
-
-    0.0,
-    1.0,
-
-    -1.0,
-    -1.0,
-
-    0.0,
-    0.0,
-
-    1.0,
-    -1.0,
-
-    1.0,
-    0.0,
-
-    -1.0,
-    1.0,
-
-    0.0,
-    1.0,
-
-    1.0,
-    -1.0,
-
-    1.0,
-    0.0,
-
-    1.0,
-    1.0,
-
-    1.0,
-    1.0,
-];
 
 fn main() {
 
@@ -204,15 +166,6 @@ fn main() {
         Vec3::new(1.0, 1.0, 1.0), //specular
     );
 
-    let mut fbo = 0;
-    let mut rbo = 0;
-
-    let mut fbo_quad_vao = 0;
-    let mut fbo_quad_vbo = 0;
-
-    let mut fbo_texture = 0;
-
-    let framebuffer_shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
 
     let mut skybox = Model::new("res/models/cube.obj");
     let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
@@ -228,161 +181,68 @@ fn main() {
 
     let mut skybox_texture = 0;
 
+    let framebuffer = Framebuffer::new(WIDTH as i32, HEIGHT as i32);
+
     unsafe {
-        // gl::Enable(gl::CULL_FACE);
-        // gl::FrontFace(gl::CW);
-        // gl::CullFace(gl::FRONT_AND_BACK);
 
-        // setting framebuffer
-        gl::GenFramebuffers(1, &mut fbo);
-        gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+      // SKYBOX TEXTURE
+      gl::GenTextures(1, &mut skybox_texture);
+      gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
 
-        // texture
-        gl::GenTextures(1, &mut fbo_texture);
-        gl::BindTexture(gl::TEXTURE_2D, fbo_texture);
-        gl::TexImage2D(
-            gl::TEXTURE_2D,
-            0,
-            gl::RGB as i32,
-            WIDTH as i32,
-            HEIGHT as i32,
-            0,
-            gl::RGB,
-            gl::UNSIGNED_BYTE,
-            ptr::null(),
-        );
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-        gl::BindTexture(gl::TEXTURE_2D, 0);
+      for i in 0..skybox_faces.len() {
+          let texture_data =
+              image::open(skybox_faces[i]).expect("Opening image for texture failed");
+          let texture_data = texture_data.to_rgba();
+          println!("Loaded: {:?}", skybox_faces[i]);
 
-        gl::FramebufferTexture2D(
-            gl::FRAMEBUFFER,
-            gl::COLOR_ATTACHMENT0,
-            gl::TEXTURE_2D,
-            fbo_texture,
-            0,
-        );
+          gl::TexImage2D(
+              gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+              0,
+              gl::RGBA as i32,
+              texture_data.width() as i32,
+              texture_data.height() as i32,
+              0,
+              gl::RGBA,
+              gl::UNSIGNED_BYTE,
+              mem::transmute(&texture_data.into_raw()[0]),
+          );
+      }
 
-        // renderbuffer
-        gl::GenRenderbuffers(1, &mut rbo);
-        gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
+      gl::TexParameteri(
+          gl::TEXTURE_CUBE_MAP,
+          gl::TEXTURE_MAG_FILTER,
+          gl::LINEAR as i32,
+      );
+      gl::TexParameteri(
+          gl::TEXTURE_CUBE_MAP,
+          gl::TEXTURE_MIN_FILTER,
+          gl::LINEAR as i32,
+      );
+      gl::TexParameteri(
+          gl::TEXTURE_CUBE_MAP,
+          gl::TEXTURE_WRAP_S,
+          gl::CLAMP_TO_EDGE as i32,
+      );
+      gl::TexParameteri(
+          gl::TEXTURE_CUBE_MAP,
+          gl::TEXTURE_WRAP_T,
+          gl::CLAMP_TO_EDGE as i32,
+      );
+      gl::TexParameteri(
+          gl::TEXTURE_CUBE_MAP,
+          gl::TEXTURE_WRAP_R,
+          gl::CLAMP_TO_EDGE as i32,
+      );
 
-        gl::RenderbufferStorage(
-            gl::RENDERBUFFER,
-            gl::DEPTH24_STENCIL8,
-            WIDTH as i32,
-            HEIGHT as i32,
-        );
-        gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
-
-        gl::FramebufferRenderbuffer(
-            gl::FRAMEBUFFER,
-            gl::DEPTH_STENCIL_ATTACHMENT,
-            gl::RENDERBUFFER,
-            rbo,
-        );
-
-        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
-            panic!("Framebuffer is not complete!");
-        }
-
-        gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-
-        // framebuffer quad
-        gl::GenVertexArrays(1, &mut fbo_quad_vao);
-        gl::GenBuffers(1, &mut fbo_quad_vbo);
-
-        gl::BindVertexArray(fbo_quad_vao);
-
-        // Create a Vertex Buffer Object and copy the vertex data to it
-        gl::BindBuffer(gl::ARRAY_BUFFER, fbo_quad_vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            (QUAD_VERTICES.len() * mem::size_of::<f32>()) as GLsizeiptr,
-            mem::transmute(&QUAD_VERTICES[0]),
-            gl::STATIC_DRAW,
-        );
-
-        // pos
-        gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(
-            0,
-            2,
-            gl::FLOAT,
-            gl::FALSE as GLboolean,
-            4 * mem::size_of::<f32>() as i32,
-            ptr::null(),
-        );
-        // uvs
-        gl::EnableVertexAttribArray(1);
-        gl::VertexAttribPointer(
-            1,
-            2,
-            gl::FLOAT,
-            gl::FALSE as GLboolean,
-            4 * mem::size_of::<f32>() as i32,
-            mem::transmute(2 * mem::size_of::<f32>()),
-        );
-
-        gl::BindVertexArray(0);
-
-        // SKYBOX TEXTURE
-        gl::GenTextures(1, &mut skybox_texture);
-        gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
-
-        for i in 0..skybox_faces.len() {
-            let texture_data =
-                image::open(skybox_faces[i]).expect("Opening image for texture failed");
-            let texture_data = texture_data.to_rgba();
-            println!("Loaded: {:?}", skybox_faces[i]);
-
-            gl::TexImage2D(
-                gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
-                0,
-                gl::RGBA as i32,
-                texture_data.width() as i32,
-                texture_data.height() as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                mem::transmute(&texture_data.into_raw()[0]),
-            );
-        }
-
-        gl::TexParameteri(
-            gl::TEXTURE_CUBE_MAP,
-            gl::TEXTURE_MAG_FILTER,
-            gl::LINEAR as i32,
-        );
-        gl::TexParameteri(
-            gl::TEXTURE_CUBE_MAP,
-            gl::TEXTURE_MIN_FILTER,
-            gl::LINEAR as i32,
-        );
-        gl::TexParameteri(
-            gl::TEXTURE_CUBE_MAP,
-            gl::TEXTURE_WRAP_S,
-            gl::CLAMP_TO_EDGE as i32,
-        );
-        gl::TexParameteri(
-            gl::TEXTURE_CUBE_MAP,
-            gl::TEXTURE_WRAP_T,
-            gl::CLAMP_TO_EDGE as i32,
-        );
-        gl::TexParameteri(
-            gl::TEXTURE_CUBE_MAP,
-            gl::TEXTURE_WRAP_R,
-            gl::CLAMP_TO_EDGE as i32,
-        );
-
-        gl::BindTexture(gl::TEXTURE_2D, 0);
+      gl::BindTexture(gl::TEXTURE_2D, 0);
     }
 
     let mut running = true;
     let mut time = 0.0;
+
     while running {
 
-        // process input
+        // Process input
         input(&pressed_keys, &mut camera);
 
         time += 0.16;
@@ -392,26 +252,29 @@ fn main() {
         // println!("{:?}", time);
 
         unsafe {
+            let projection_matrix = Mat4::from_perspective(45.0, WIDTH / HEIGHT, 0.1, 100.0);
+            let view_matrix = camera.get_look_at_matrix();
 
-            // bind offscreen framebuffer
-            gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+            // Bind offscreen framebuffer
+            framebuffer.bind();
+
+            // gl::Enable(gl::CULL_FACE);
+            // gl::FrontFace(gl::CW); 
+            // gl::CullFace(gl::FRONT_AND_BACK);
 
             gl::ClearColor(44.0 / 255.0, 44.0 / 255.0, 44.0 / 255.0, 1.0);
             gl::Enable(gl::DEPTH_TEST);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
+            // // TODO: shoudn't it be before render loop?
+            // // near - as big as posible (0.1)
+            // // far - as small as posible (100 - far and small enought)
 
-            // TODO: shoudn't it be before render loop?
-            // near - as big as posible (0.1)
-            // far - as small as posible (100 - far and small enought)
-            let projection_matrix = Mat4::from_perspective(45.0, WIDTH / HEIGHT, 0.1, 100.0);
-
-            // opengl forward is -z;
-            // let radius = 20.0;
-            // camera.position.x = (angle.cos() * radius) as f32;
-            // camera.position.z = (angle.sin() * radius) as f32;
-            // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
-            let view_matrix = camera.get_look_at_matrix();
+            // // opengl forward is -z;
+            // // let radius = 20.0;
+            // // camera.position.x = (angle.cos() * radius) as f32;
+            // // camera.position.z = (angle.sin() * radius) as f32;
+            // // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
 
             gl::DepthMask(gl::FALSE);
             skybox_shader.bind();
@@ -468,6 +331,7 @@ fn main() {
                 model.draw();
             }
 
+            // Update light position
             if forward && point_light.position.z > -25.0 {
                 point_light.position.z -= 5.0 * 0.016;
             } else if point_light.position.z < -25.0 {
@@ -482,19 +346,8 @@ fn main() {
 
             point_light.draw(projection_matrix, view_matrix);
 
-            // Bind default framebuffer
-            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-
-            // Draw offscreen framebuffer
-            gl::ClearColor(1.0, 1.0, 1.0, 1.0);
-            gl::Disable(gl::DEPTH_TEST);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-
-            framebuffer_shader.bind();
-            gl::BindVertexArray(fbo_quad_vao);
-            gl::BindTexture(gl::TEXTURE_2D, fbo_texture);
-            gl::DrawArrays(gl::TRIANGLES, 0, 6);
-            gl::BindVertexArray(0);
+            // Unbind and draw offscreen framebuffer
+            framebuffer.draw();
         }
 
         window.swap_buffers().unwrap();
@@ -560,14 +413,6 @@ fn main() {
             } 
             _ => {}
         });
-    }
-
-    unsafe {
-        gl::DeleteFramebuffers(1, &mut fbo);
-        gl::DeleteFramebuffers(1, &mut rbo);
-
-        gl::DeleteFramebuffers(1, &mut fbo_quad_vao);
-        gl::DeleteFramebuffers(1, &mut fbo_quad_vbo);
     }
 }
 
