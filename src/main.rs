@@ -33,6 +33,7 @@ use engine::transform::Transform;
 use engine::model::Model;
 use engine::camera::Camera;
 use engine::lights::{PointLight, DirLight};
+use engine::scene::Scene;
 
 use math::mat4::Mat4;
 use math::vec3::Vec3;
@@ -122,7 +123,7 @@ fn main() {
     // let model = Mod::new("res/models/", "susanne_highpoly.obj");
     // let model = Model::new("res/models/mouse/", "mouselowpoly.obj");
     // let model = Model::new("res/ves/", "Ves.obj");
-    let model = Model::new("res/models/", "column.obj");
+    let model = Model::new("res/models/column.obj");
 
     let mut forward = true;
 
@@ -208,7 +209,7 @@ fn main() {
     let framebuffer_shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
 
 
-    let mut skybox = Model::new("res/models/", "cube.obj");
+    let mut skybox = Model::new("res/models/cube.obj");
     let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
 
     let skybox_faces = vec![

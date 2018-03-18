@@ -8,7 +8,7 @@ use self::math::vec2::Vec2;
 use std::error::Error;
 use std::io::prelude::*;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io::BufReader;
 // use std::str;
 use std::mem;
@@ -49,13 +49,17 @@ pub struct Vertex {
     pub binormal: Vec3,
 }
 
-impl Model {
-    pub fn new(folder_path: &str, file_path: &str) -> Model {
-        let mut model_path = String::new();
-        model_path.push_str(folder_path);
-        model_path.push_str(file_path);
-        let path = Path::new(model_path.as_str());
+fn get_texture_path(path: &Path, file_name: &str) -> String {
+    let mut path_buf = path.to_path_buf();
+    path_buf.set_file_name(file_name);
+    let raw = path_buf.to_str().unwrap();
+    String::from(raw)
+}
 
+impl Model {
+    pub fn new(file_path: &str) -> Model {
+        let path = Path::new(file_path);
+        
         let object = tobj::load_obj(path);
         let (models, materials) = object.unwrap();
 
@@ -72,10 +76,9 @@ impl Model {
                 let texture = match textures.get(&material.diffuse_texture) {
                     Some(_) => None,
                     None => {
-                        let mut path = String::new();
-                        path.push_str(folder_path);
-                        path.push_str(material.diffuse_texture.as_str());
-                        Some(Texture::new(path.as_str(), 4.0))
+                        let file_name = material.diffuse_texture.as_str();
+                        let raw = get_texture_path(&path, file_name);
+                        Some(Texture::new(raw.as_str(), 4.0))
                     },
                 };
 
@@ -93,10 +96,9 @@ impl Model {
                 let texture = match textures.get(&material.specular_texture) {
                     Some(_) => None,
                     None => {
-                        let mut path = String::new();
-                        path.push_str(folder_path);
-                        path.push_str(material.specular_texture.as_str());
-                        Some(Texture::new(path.as_str(), 4.0))
+                        let file_name = material.specular_texture.as_str();
+                        let raw = get_texture_path(&path, file_name);
+                        Some(Texture::new(raw.as_str(), 4.0))
                     },
                 };
 
@@ -123,10 +125,9 @@ impl Model {
                 let texture = match textures.get(&normal_path) {
                     Some(_) => None,
                     None => {
-                        let mut path = String::new();
-                        path.push_str(folder_path);
-                        path.push_str(normal_path.as_str());
-                        Some(Texture::new(path.as_str(), 4.0))
+                        let file_name = normal_path.as_str();
+                        let raw = get_texture_path(&path, file_name);
+                        Some(Texture::new(raw.as_str(), 4.0))
                     },
                 };
 
@@ -140,10 +141,9 @@ impl Model {
                 let texture = match textures.get(&material.normal_texture) {
                     Some(_) => None,
                     None => {
-                        let mut path = String::new();
-                        path.push_str(folder_path);
-                        path.push_str(material.normal_texture.as_str());
-                        Some(Texture::new(path.as_str(), 4.0))
+                        let file_name = material.normal_texture.as_str();
+                        let raw = get_texture_path(&path, file_name);
+                        Some(Texture::new(raw.as_str(), 4.0))
                     },
                 };
 

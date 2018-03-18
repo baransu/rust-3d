@@ -46,7 +46,7 @@ impl PointLight {
     pub fn new(position: Vec3, linear: f32, quadratic: f32, ambient: Vec3, diffuse: Vec3, specular: Vec3) -> PointLight {
 
         let shader = Shader::new("res/lightShader.vert", "res/lightShader.frag");
-        let model = Model::new("res/models/", "cube.obj");
+        let model = Model::new("res/models/cube.obj");
 
         let transform = Transform::new(position, Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.25, 0.25, 0.25));
 

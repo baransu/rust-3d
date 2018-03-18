@@ -36,6 +36,7 @@ impl Texture {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
+            println!("Opening image: {}", texture_path);
             let texture_data = image::open(texture_path).expect("Opening image for texture failed");
             let texture_data = texture_data.to_rgba();
 
