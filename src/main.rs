@@ -208,7 +208,6 @@ fn main() {
 
     let framebuffer_shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
 
-
     let mut skybox = Model::new("res/models/cube.obj");
     let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
 
@@ -329,7 +328,7 @@ fn main() {
             let texture_data =
                 image::open(skybox_faces[i]).expect("Opening image for texture failed");
             let texture_data = texture_data.to_rgba();
-            println!("loaded: {:?}", skybox_faces[i]);
+            println!("Loaded: {:?}", skybox_faces[i]);
 
             gl::TexImage2D(
                 gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
@@ -398,6 +397,7 @@ fn main() {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
 
+            // TODO: shoudn't it be before render loop?
             // near - as big as posible (0.1)
             // far - as small as posible (100 - far and small enought)
             let projection_matrix = Mat4::from_perspective(45.0, WIDTH / HEIGHT, 0.1, 100.0);
@@ -558,7 +558,7 @@ fn main() {
                 }
             } 
             _ => {}
-        })
+        });
     }
 
     unsafe {

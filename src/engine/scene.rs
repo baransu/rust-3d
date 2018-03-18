@@ -5,9 +5,8 @@ extern crate serde_json;
 pub struct Scene {
   // entities
   // camera ???
-  // skybox - should it be asigned to camera ???
+  // skybox
   // lights
-
 }
 
 

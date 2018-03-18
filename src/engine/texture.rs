@@ -12,6 +12,7 @@ pub struct Texture {
     texture_id: u32,
 }
 
+// TODO: do we have memory leaks here right now?
 // impl Drop for Texture {
 //     fn drop(&mut self) {
 //         unsafe { gl::DeleteTextures(1, &mut self.texture_id) } ;
@@ -67,7 +68,7 @@ impl Texture {
                 current_anisotropy = anisotropy;
             }
 
-            println!("current anisotropy for {:?}: {:?}", texture_path, current_anisotropy);
+            println!("Current anisotropy for {:?}: {:?}", texture_path, current_anisotropy);
 
             gl::TexParameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, current_anisotropy);
 

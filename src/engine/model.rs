@@ -56,6 +56,23 @@ fn get_texture_path(path: &Path, file_name: &str) -> String {
     String::from(raw)
 }
 
+fn insert_texture(textures: &mut HashMap<String, Texture>, path: &Path, texture_name: String) {
+    let texture = match textures.get(&texture_name) {
+        Some(_) => None,
+        None => {
+            let file_name = texture_name.as_str();
+            let raw = get_texture_path(&path, file_name);
+            Some(Texture::new(raw.as_str(), 4.0))
+        },
+    };
+
+    if let Some(t) = texture {
+        textures.insert(texture_name, t);
+    };
+
+}
+
+
 impl Model {
     pub fn new(file_path: &str) -> Model {
         let path = Path::new(file_path);
@@ -72,43 +89,12 @@ impl Model {
 
             // diffuse
             if material.diffuse_texture.len() > 0 {
-
-                let texture = match textures.get(&material.diffuse_texture) {
-                    Some(_) => None,
-                    None => {
-                        let file_name = material.diffuse_texture.as_str();
-                        let raw = get_texture_path(&path, file_name);
-                        Some(Texture::new(raw.as_str(), 4.0))
-                    },
-                };
-
-                match texture {
-                    Some(t) => {
-                        textures.insert(material.diffuse_texture, t);
-                    },
-                    None => (),
-                };
-
+                insert_texture(&mut textures, &path, material.diffuse_texture);
             }
 
             // specular
             if material.specular_texture.len() > 0 {
-                let texture = match textures.get(&material.specular_texture) {
-                    Some(_) => None,
-                    None => {
-                        let file_name = material.specular_texture.as_str();
-                        let raw = get_texture_path(&path, file_name);
-                        Some(Texture::new(raw.as_str(), 4.0))
-                    },
-                };
-
-                match texture {
-                    Some(t) => {
-                        textures.insert(material.specular_texture, t);
-                    },
-                    None => (),
-                };
-
+                insert_texture(&mut textures, &path, material.specular_texture);
             }
 
             let mut normal_path = String::new();
@@ -122,37 +108,9 @@ impl Model {
             // normal
             // bump
             if normal_path.len() > 0 {
-                let texture = match textures.get(&normal_path) {
-                    Some(_) => None,
-                    None => {
-                        let file_name = normal_path.as_str();
-                        let raw = get_texture_path(&path, file_name);
-                        Some(Texture::new(raw.as_str(), 4.0))
-                    },
-                };
-
-                match texture {
-                    Some(t) => {
-                        textures.insert(normal_path, t);
-                    },
-                    None => (),
-                };
+                insert_texture(&mut textures, &path, normal_path);
             } else if material.normal_texture.len() > 0 {
-                let texture = match textures.get(&material.normal_texture) {
-                    Some(_) => None,
-                    None => {
-                        let file_name = material.normal_texture.as_str();
-                        let raw = get_texture_path(&path, file_name);
-                        Some(Texture::new(raw.as_str(), 4.0))
-                    },
-                };
-
-                match texture {
-                    Some(t) => {
-                        textures.insert(material.normal_texture, t);
-                    },
-                    None => (),
-                };
+                insert_texture(&mut textures, &path, material.normal_texture);
             }
         }
 
@@ -162,7 +120,7 @@ impl Model {
 
             let mut container: Vec<Vertex> = Vec::new();
 
-            println!("{:?}, {:?}, {:?}, {:?}", mesh.positions.len(), mesh.texcoords.len(), mesh.normals.len(), mesh.indices.len());
+            // println!("{:?}, {:?}, {:?}, {:?}", mesh.positions.len(), mesh.texcoords.len(), mesh.normals.len(), mesh.indices.len());
 
             for i in 0..mesh.positions.len()/3 as usize {
                 // pos = [x, y, z]
@@ -208,7 +166,6 @@ impl Model {
                 let f = 1.0 / (delta_uv1.x * delta_uv2.y - delta_uv2.x * delta_uv1.y);
 
                 let mut tangent = Vec3::new(0.0, 0.0, 0.0);
-
                 tangent.x = f * (delta_uv2.y * edge1.x - delta_uv1.y * edge2.x);
                 tangent.y = f * (delta_uv2.y * edge1.y - delta_uv1.y * edge2.y);
                 tangent.z = f * (delta_uv2.y * edge1.z - delta_uv1.y * edge2.z);
@@ -230,10 +187,7 @@ impl Model {
             }
 
             // textures
-            let mat_id: usize = match mesh.material_id {
-                Some(id) => id,
-                None => { panic!("no material_id"); },
-            };
+            let mat_id: usize = mesh.material_id.unwrap();
             let material = materials[mat_id].clone();
 
             // TODO: implement match
@@ -269,14 +223,15 @@ impl Model {
                 vbo: 0,
                 ebo: 0,
                 albedo: diffuse,
-                specular: specular,
-                normal: normal
+                specular,
+                normal
             };
 
             m.init();
             meshes.push(m);
         }
 
+        // TODO: what was this doing?
         // for (i, m) in materials.iter().enumerate() {
         //     println!("material[{}].name = \'{}\'", i, m.name);
         //     println!("    material.Ka = ({}, {}, {})", m.ambient[0], m.ambient[1], m.ambient[2]);
@@ -409,34 +364,23 @@ impl Model {
             //TODO: shaders
 
             // textures
-            match self.meshes[i].albedo {
-                Some(ref albedo) => {
-                    match self.textures.get(albedo) {
-                        Some(texture) => texture.bind(gl::TEXTURE0),
-                        None => (),
-                    }
-                },
-                None => (),
+            if let Some(ref albedo) = self.meshes[i].albedo {
+                if let Some(texture) = self.textures.get(albedo) {
+                    texture.bind(gl::TEXTURE0)
+                };
             };
 
-            match self.meshes[i].specular {
-                Some(ref specular) => {
-                    match self.textures.get(specular) {
-                        Some(texture) => texture.bind(gl::TEXTURE1),
-                        None => (),
-                    }
-                },
-                None => (),
+
+            if let Some(ref specular) = self.meshes[i].specular {
+                if let Some(texture) = self.textures.get(specular) {
+                    texture.bind(gl::TEXTURE1)
+                };
             };
 
-            match self.meshes[i].normal {
-                Some(ref normal) => {
-                    match self.textures.get(normal) {
-                        Some(texture) => texture.bind(gl::TEXTURE2),
-                        None => (),
-                    }
-                },
-                None => (),
+            if let Some(ref normal) = self.meshes[i].normal {
+                if let Some(texture) = self.textures.get(normal) {
+                    texture.bind(gl::TEXTURE2)
+                };
             };
 
             self.meshes[i].draw();
