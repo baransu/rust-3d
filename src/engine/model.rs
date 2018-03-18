@@ -20,13 +20,15 @@ use self::tobj::*;
 
 use texture::Texture;
 
-pub struct Modell {
-    meshes: Vec<Meshh>,
+// TODO: Refactor to Model
+pub struct Model {
+    meshes: Vec<Mesh>,
     textures: HashMap<String, Texture>,
     // materials and other stuff
 }
 
-struct Meshh {
+// TODO: Refactor to Mesh
+struct Mesh {
     vertices: Vec<Vertex>,
     indices: Vec<u32>,
     vao: u32,
@@ -47,8 +49,8 @@ pub struct Vertex {
     pub binormal: Vec3,
 }
 
-impl Modell {
-    pub fn new(folder_path: &str, file_path: &str) -> Modell {
+impl Model {
+    pub fn new(folder_path: &str, file_path: &str) -> Model {
         let mut model_path = String::new();
         model_path.push_str(folder_path);
         model_path.push_str(file_path);
@@ -57,7 +59,7 @@ impl Modell {
         let object = tobj::load_obj(path);
         let (models, materials) = object.unwrap();
 
-        let mut meshes: Vec<Meshh> = Vec::new();
+        let mut meshes: Vec<Mesh> = Vec::new();
 
         let mut textures: HashMap<String, Texture> = HashMap::new();
 
@@ -260,7 +262,7 @@ impl Modell {
                 normal = Some(normal_path);
             }
 
-            let mut m = Meshh {
+            let mut m = Mesh {
                 vertices: container,
                 indices: mesh.indices.clone(),
                 vao: 0,
@@ -292,7 +294,7 @@ impl Modell {
         //     }
         // }
 
-        Modell { meshes: meshes, textures: textures}
+        Model { meshes: meshes, textures: textures}
 
         // let f = match File::open(&path) {
         //     Ok(file) => file,
@@ -339,9 +341,9 @@ impl Modell {
         //
         //         let splits: Vec<&str> = l.split(' ').collect();
         //
-        //         let mut a = Modell::handle_split(splits[0]);
-        //         let mut b = Modell::handle_split(splits[0]);
-        //         let mut c = Modell::handle_split(splits[0]);
+        //         let mut a = Model::handle_split(splits[0]);
+        //         let mut b = Model::handle_split(splits[0]);
+        //         let mut c = Model::handle_split(splits[0]);
         //
         //         a -= 1;
         //         b -= 1;
@@ -375,7 +377,7 @@ impl Modell {
         //     v.push(vertex);
         // }
         //
-        // Modell {vertices: v, indices: indices }
+        // Model {vertices: v, indices: indices }
     }
     // fn handle_split(split: &str) -> u32 {
     //     let mut slashes = 0;
@@ -443,7 +445,7 @@ impl Modell {
 
 }
 
-impl Drop for Meshh {
+impl Drop for Mesh {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteBuffers(1, &self.vbo);
@@ -453,7 +455,7 @@ impl Drop for Meshh {
     }
 }
 
-impl Meshh {
+impl Mesh {
     fn init(&mut self) {
         unsafe {
             gl::GenVertexArrays(1, &mut self.vao);

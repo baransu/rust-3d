@@ -30,7 +30,7 @@ use rand::Rng;
 use engine::shader::Shader;
 use engine::texture::Texture;
 use engine::transform::Transform;
-use engine::model::Modell;
+use engine::model::Model;
 use engine::camera::Camera;
 use engine::lights::{PointLight, DirLight};
 
@@ -120,9 +120,9 @@ fn main() {
 
     // let model = Mod::new("res/models/", "susanne_lowpoly.obj");
     // let model = Mod::new("res/models/", "susanne_highpoly.obj");
-    // let model = Modell::new("res/models/mouse/", "mouselowpoly.obj");
-    // let model = Modell::new("res/ves/", "Ves.obj");
-    let model = Modell::new("res/models/", "column.obj");
+    // let model = Model::new("res/models/mouse/", "mouselowpoly.obj");
+    // let model = Model::new("res/ves/", "Ves.obj");
+    let model = Model::new("res/models/", "column.obj");
 
     let mut forward = true;
 
@@ -208,7 +208,7 @@ fn main() {
     let framebuffer_shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
 
 
-    let mut skybox = Modell::new("res/models/", "cube.obj");
+    let mut skybox = Model::new("res/models/", "cube.obj");
     let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
 
     let skybox_faces = vec![
