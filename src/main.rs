@@ -112,7 +112,12 @@ fn main() {
 
     let mut camera = Camera::new(Vec3::new(0.0, 0.0, 20.0), Vec3::new(0.0, 0.0, -90.0));
 
-    let shader = Shader::new("res/vshader.vert", "res/handpainted.frag");
+    // ves shader
+    let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
+
+    // columns shader
+    // let shader = Shader::new("res/vshader.vert", "res/handpainted.frag");
+
     // let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
     // let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
     // let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
@@ -122,8 +127,9 @@ fn main() {
     // let model = Mod::new("res/models/", "susanne_lowpoly.obj");
     // let model = Mod::new("res/models/", "susanne_highpoly.obj");
     // let model = Model::new("res/models/mouse/", "mouselowpoly.obj");
-    // let model = Model::new("res/ves/", "Ves.obj");
-    let model = Model::new("res/models/column.obj");
+    
+    let model = Model::new("res/models/ves/Ves.obj");
+    // let model = Model::new("res/models/column.obj");
 
     let mut forward = true;
 
@@ -152,31 +158,31 @@ fn main() {
         Vec3::new(0.0, 0.0, 0.0),
         Vec3::new(1.0, 1.0, 1.0),
     ));
-    entities.push(Transform::new(
-        Vec3::new(0.0, -5.0, -5.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(1.0, 1.0, 1.0),
-    ));
-    entities.push(Transform::new(
-        Vec3::new(0.0, -5.0, -10.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(1.0, 1.0, 1.0),
-    ));
-    entities.push(Transform::new(
-        Vec3::new(0.0, -5.0, -15.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(1.0, 1.0, 1.0),
-    ));
-    entities.push(Transform::new(
-        Vec3::new(0.0, -5.0, -20.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(1.0, 1.0, 1.0),
-    ));
-    entities.push(Transform::new(
-        Vec3::new(0.0, -5.0, -25.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(1.0, 1.0, 1.0),
-    ));
+    // entities.push(Transform::new(
+    //     Vec3::new(0.0, -5.0, -5.0),
+    //     Vec3::new(0.0, 0.0, 0.0),
+    //     Vec3::new(1.0, 1.0, 1.0),
+    // ));
+    // entities.push(Transform::new(
+    //     Vec3::new(0.0, -5.0, -10.0),
+    //     Vec3::new(0.0, 0.0, 0.0),
+    //     Vec3::new(1.0, 1.0, 1.0),
+    // ));
+    // entities.push(Transform::new(
+    //     Vec3::new(0.0, -5.0, -15.0),
+    //     Vec3::new(0.0, 0.0, 0.0),
+    //     Vec3::new(1.0, 1.0, 1.0),
+    // ));
+    // entities.push(Transform::new(
+    //     Vec3::new(0.0, -5.0, -20.0),
+    //     Vec3::new(0.0, 0.0, 0.0),
+    //     Vec3::new(1.0, 1.0, 1.0),
+    // ));
+    // entities.push(Transform::new(
+    //     Vec3::new(0.0, -5.0, -25.0),
+    //     Vec3::new(0.0, 0.0, 0.0),
+    //     Vec3::new(1.0, 1.0, 1.0),
+    // ));
 
     // dir_light
     let dir_light = DirLight::new(
@@ -369,9 +375,7 @@ fn main() {
             gl::CLAMP_TO_EDGE as i32,
         );
 
-
         gl::BindTexture(gl::TEXTURE_2D, 0);
-
     }
 
     let mut running = true;
@@ -416,14 +420,13 @@ fn main() {
             skybox_shader.set_uniform_matrix4fv("view", view_matrix);
 
             gl::ActiveTexture(gl::TEXTURE0);
-            skybox_shader.set_uniform_1i("skybox", 0);
-
             gl::BindTexture(gl::TEXTURE_CUBE_MAP, skybox_texture);
+            skybox_shader.set_uniform_1i("skybox", 0);
             skybox.draw();
+
             gl::DepthMask(gl::TRUE);
 
-
-            // draw scene
+            // Draw scene
             shader.bind();
 
             // diffuse_map.bind(gl::TEXTURE0);
@@ -438,6 +441,7 @@ fn main() {
             shader.set_uniform_matrix4fv("projection", projection_matrix);
             shader.set_uniform_matrix4fv("view", view_matrix);
 
+            shader.set_uniform_3f("lightPos", point_light.position);
             shader.set_uniform_3f("viewPos", camera.position);
 
             // directional light
@@ -445,9 +449,6 @@ fn main() {
             shader.set_uniform_3f("dirLight.ambient", dir_light.ambient);
             shader.set_uniform_3f("dirLight.diffuse", dir_light.diffuse);
             shader.set_uniform_3f("dirLight.specular", dir_light.specular);
-
-            // point light
-            // let ligh_pos = Vec3::new(0.0, 2.0, 2.0);
 
             shader.set_uniform_3f("pointLight.position", point_light.position);
 
@@ -481,10 +482,10 @@ fn main() {
 
             point_light.draw(projection_matrix, view_matrix);
 
-
-            // bind default framebuffer
+            // Bind default framebuffer
             gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-            // draw offscreen texture
+
+            // Draw offscreen framebuffer
             gl::ClearColor(1.0, 1.0, 1.0, 1.0);
             gl::Disable(gl::DEPTH_TEST);
             gl::Clear(gl::COLOR_BUFFER_BIT);

@@ -12,6 +12,9 @@ pub struct Scene {
 
 impl Scene {
   pub fn load(path: &str) -> Scene {
+    // load file
+    // parse 
+    // 
     Scene {}
   }
 

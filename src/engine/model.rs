@@ -57,19 +57,13 @@ fn get_texture_path(path: &Path, file_name: &str) -> String {
 }
 
 fn insert_texture(textures: &mut HashMap<String, Texture>, path: &Path, texture_name: String) {
-    let texture = match textures.get(&texture_name) {
-        Some(_) => None,
-        None => {
-            let file_name = texture_name.as_str();
-            let raw = get_texture_path(&path, file_name);
-            Some(Texture::new(raw.as_str(), 4.0))
-        },
+    if let None = textures.get(&texture_name) {
+        let key = texture_name.clone();
+        let file_name = texture_name.as_str();
+        let raw = get_texture_path(&path, file_name);
+        let value = Texture::new(raw.as_str(), 4.0);
+        textures.insert(key, value);
     };
-
-    if let Some(t) = texture {
-        textures.insert(texture_name, t);
-    };
-
 }
 
 
@@ -369,7 +363,6 @@ impl Model {
                     texture.bind(gl::TEXTURE0)
                 };
             };
-
 
             if let Some(ref specular) = self.meshes[i].specular {
                 if let Some(texture) = self.textures.get(specular) {
