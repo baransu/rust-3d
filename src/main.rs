@@ -29,6 +29,7 @@ use rand::Rng;
 // local
 use engine::framebuffer::Framebuffer;
 use engine::shader::Shader;
+use engine::skybox::Skybox;
 use engine::texture::Texture;
 use engine::transform::Transform;
 use engine::model::Model;
@@ -166,76 +167,15 @@ fn main() {
         Vec3::new(1.0, 1.0, 1.0), //specular
     );
 
-
-    let mut skybox = Model::new("res/models/cube.obj");
-    let mut skybox_shader = Shader::new("res/skybox.vert", "res/skybox.frag");
-
-    let skybox_faces = vec![
+    let framebuffer = Framebuffer::new(WIDTH as i32, HEIGHT as i32);
+    let skybox = Skybox::new(vec![
         "res/cubemap_right.png",
         "res/cubemap_left.png",
         "res/cubemap_top.png",
         "res/cubemap_bottom.png",
         "res/cubemap_back.png",
         "res/cubemap_front.png",
-    ];
-
-    let mut skybox_texture = 0;
-
-    let framebuffer = Framebuffer::new(WIDTH as i32, HEIGHT as i32);
-
-    unsafe {
-
-      // SKYBOX TEXTURE
-      gl::GenTextures(1, &mut skybox_texture);
-      gl::BindTexture(gl::TEXTURE_2D, skybox_texture);
-
-      for i in 0..skybox_faces.len() {
-          let texture_data =
-              image::open(skybox_faces[i]).expect("Opening image for texture failed");
-          let texture_data = texture_data.to_rgba();
-          println!("Loaded: {:?}", skybox_faces[i]);
-
-          gl::TexImage2D(
-              gl::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
-              0,
-              gl::RGBA as i32,
-              texture_data.width() as i32,
-              texture_data.height() as i32,
-              0,
-              gl::RGBA,
-              gl::UNSIGNED_BYTE,
-              mem::transmute(&texture_data.into_raw()[0]),
-          );
-      }
-
-      gl::TexParameteri(
-          gl::TEXTURE_CUBE_MAP,
-          gl::TEXTURE_MAG_FILTER,
-          gl::LINEAR as i32,
-      );
-      gl::TexParameteri(
-          gl::TEXTURE_CUBE_MAP,
-          gl::TEXTURE_MIN_FILTER,
-          gl::LINEAR as i32,
-      );
-      gl::TexParameteri(
-          gl::TEXTURE_CUBE_MAP,
-          gl::TEXTURE_WRAP_S,
-          gl::CLAMP_TO_EDGE as i32,
-      );
-      gl::TexParameteri(
-          gl::TEXTURE_CUBE_MAP,
-          gl::TEXTURE_WRAP_T,
-          gl::CLAMP_TO_EDGE as i32,
-      );
-      gl::TexParameteri(
-          gl::TEXTURE_CUBE_MAP,
-          gl::TEXTURE_WRAP_R,
-          gl::CLAMP_TO_EDGE as i32,
-      );
-
-      gl::BindTexture(gl::TEXTURE_2D, 0);
-    }
+    ]);
 
     let mut running = true;
     let mut time = 0.0;
@@ -276,18 +216,8 @@ fn main() {
             // camera.position.z = (angle.sin() * radius) as f32;
             // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
 
-            gl::DepthMask(gl::FALSE);
-            skybox_shader.bind();
-
-            skybox_shader.set_uniform_matrix4fv("projection", projection_matrix);
-            skybox_shader.set_uniform_matrix4fv("view", view_matrix);
-
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_CUBE_MAP, skybox_texture);
-            skybox_shader.set_uniform_1i("skybox", 0);
-            skybox.draw();
-
-            gl::DepthMask(gl::TRUE);
+            // Draw skybox
+            skybox.draw(projection_matrix, view_matrix);
 
             // Draw scene
             shader.bind();
