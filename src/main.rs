@@ -252,6 +252,8 @@ fn main() {
         // println!("{:?}", time);
 
         unsafe {
+            // near - as big as posible (0.1)
+            // far - as small as posible (100 - far and small enought)
             let projection_matrix = Mat4::from_perspective(45.0, WIDTH / HEIGHT, 0.1, 100.0);
             let view_matrix = camera.get_look_at_matrix();
 
@@ -266,15 +268,13 @@ fn main() {
             gl::Enable(gl::DEPTH_TEST);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            // // TODO: shoudn't it be before render loop?
-            // // near - as big as posible (0.1)
-            // // far - as small as posible (100 - far and small enought)
+            // TODO: shoudn't it be before render loop?
 
-            // // opengl forward is -z;
-            // // let radius = 20.0;
-            // // camera.position.x = (angle.cos() * radius) as f32;
-            // // camera.position.z = (angle.sin() * radius) as f32;
-            // // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
+            // opengl forward is -z;
+            // let radius = 20.0;
+            // camera.position.x = (angle.cos() * radius) as f32;
+            // camera.position.z = (angle.sin() * radius) as f32;
+            // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
 
             gl::DepthMask(gl::FALSE);
             skybox_shader.bind();

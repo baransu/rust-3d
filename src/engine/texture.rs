@@ -76,7 +76,7 @@ impl Texture {
 
         }
 
-        Texture { texture_id: texture_id }
+        Texture { texture_id }
     }
 
     pub fn bind(&self, location: u32) {

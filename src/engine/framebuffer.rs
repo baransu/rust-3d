@@ -23,7 +23,7 @@ impl Framebuffer {
       shader.bind();
       shader.set_uniform_1i("screenTexture", 0);
 
-      let mut fbo = 0;
+      let mut fbo = 0;        
       let mut rbo = 0;
 
       let mut fbo_quad_vao = 0;
@@ -34,6 +34,7 @@ impl Framebuffer {
       unsafe {
 
         // setting framebuffer
+
         gl::GenFramebuffers(1, &mut fbo);
         gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
 
@@ -62,6 +63,7 @@ impl Framebuffer {
         );
 
         // renderbuffer
+
         gl::GenRenderbuffers(1, &mut rbo);
         gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
 
@@ -83,7 +85,7 @@ impl Framebuffer {
             panic!("Framebuffer is not complete!");
         }
 
-        gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
+        // gl::BindRenderbuffer(gl::RENDERBUFFER, 0);
         gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 
         // framebuffer quad
@@ -136,11 +138,12 @@ impl Framebuffer {
       self.shader.bind();
       gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 
-      gl::ClearColor(1.0, 1.0, 1.0, 1.0);
       gl::Disable(gl::DEPTH_TEST);
+      gl::ClearColor(1.0, 1.0, 1.0, 1.0);
       gl::Clear(gl::COLOR_BUFFER_BIT);
 
       gl::BindVertexArray(self.fbo_quad_vao);
+      gl::ActiveTexture(gl::TEXTURE0);
       gl::BindTexture(gl::TEXTURE_2D, self.texture);
       gl::DrawArrays(gl::TRIANGLES, 0, 6);
       gl::BindVertexArray(0);
@@ -149,7 +152,6 @@ impl Framebuffer {
 
 impl Drop for Framebuffer {
   fn drop(&mut self) {
-    println!("dropping framebuffer");
     unsafe {
       gl::DeleteFramebuffers(1, &self.fbo);
       gl::DeleteFramebuffers(1, &self.rbo);

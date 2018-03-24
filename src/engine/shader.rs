@@ -81,7 +81,7 @@ impl Shader {
     }
 
     // uniforms
-    pub unsafe fn get_shader_location(&self, name: &str) -> GLint{
+    pub unsafe fn get_shader_location(&self, name: &str) -> GLint {
         gl::GetUniformLocation(self.program, CString::new(name).unwrap().as_ptr())
     }
 
