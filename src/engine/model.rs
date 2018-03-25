@@ -4,30 +4,31 @@ extern crate opengl as gl;
 
 use self::math::vec3::Vec3;
 use self::math::vec2::Vec2;
+use self::gl::types::*;
+use self::tobj::*;
+use texture::Texture;
+use itertools::Itertools;
 
 use std::error::Error;
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::BufReader;
-// use std::str;
 use std::mem;
 use std::ptr;
 use std::collections::HashMap;
 
-use self::gl::types::*;
-use self::tobj::*;
+#[derive(Eq, Clone, Debug, PartialEq)]
+struct TextureRequest {
+    key: String,
+    path: String
+}
 
-use texture::Texture;
-
-// TODO: Refactor to Model
 pub struct Model {
     meshes: Vec<Mesh>,
     textures: HashMap<String, Texture>,
-    // materials and other stuff
 }
 
-// TODO: Refactor to Mesh
 struct Mesh {
     vertices: Vec<Vertex>,
     indices: Vec<u32>,
@@ -37,10 +38,8 @@ struct Mesh {
     albedo: Option<String>,
     specular: Option<String>,
     normal: Option<String>,
-    // materials and stuff
 }
 
-// #[repr(C)]
 pub struct Vertex {
     pub position: Vec3,
     pub texcoord: Vec2,
@@ -56,16 +55,12 @@ fn get_texture_path(path: &Path, file_name: &str) -> String {
     String::from(raw)
 }
 
-fn insert_texture(textures: &mut HashMap<String, Texture>, path: &Path, texture_name: String) {
-    if let None = textures.get(&texture_name) {
+fn create_texture_request(path: &Path, texture_name: String) -> TextureRequest {
         let key = texture_name.clone();
         let file_name = texture_name.as_str();
-        let raw = get_texture_path(&path, file_name);
-        let value = Texture::new(raw.as_str(), 4.0);
-        textures.insert(key, value);
-    };
+    let path = get_texture_path(&path, file_name);
+    TextureRequest { key, path }
 }
-
 
 impl Model {
     pub fn new(file_path: &str) -> Model {
@@ -78,17 +73,20 @@ impl Model {
 
         let mut textures: HashMap<String, Texture> = HashMap::new();
 
-        for m in materials.iter() {
+        let mut texture_requests: Vec<TextureRequest> = materials
+            .iter()
+            .flat_map(|m| {
             let material = m.clone();
+                let mut acc: Vec<TextureRequest> = Vec::new();
 
             // diffuse
             if material.diffuse_texture.len() > 0 {
-                insert_texture(&mut textures, &path, material.diffuse_texture);
+                    acc.push(create_texture_request(&path, material.diffuse_texture));
             }
 
             // specular
             if material.specular_texture.len() > 0 {
-                insert_texture(&mut textures, &path, material.specular_texture);
+                    acc.push(create_texture_request(&path, material.specular_texture));
             }
 
             let mut normal_path = String::new();
@@ -99,22 +97,26 @@ impl Model {
                 }
             }
 
-            // normal
-            // bump
+                // normal / bump
             if normal_path.len() > 0 {
-                insert_texture(&mut textures, &path, normal_path);
+                    acc.push(create_texture_request(&path, normal_path));
             } else if material.normal_texture.len() > 0 {
-                insert_texture(&mut textures, &path, material.normal_texture);
+                    acc.push(create_texture_request(&path, material.normal_texture));
             }
-        }
 
+                acc
+            })
+            .unique_by(|req| req.key.clone())
+            .collect();
+
+        for req in texture_requests.iter() {
+            let texture = Texture::new(req.path.clone().as_str(), 4.0);
+            textures.insert(req.key.clone(), texture);
+        }
 
         for j in 0..models.len() {
             let mesh = &models[j].mesh;
-
             let mut container: Vec<Vertex> = Vec::new();
-
-            // println!("{:?}, {:?}, {:?}, {:?}", mesh.positions.len(), mesh.texcoords.len(), mesh.normals.len(), mesh.indices.len());
 
             for i in 0..mesh.positions.len()/3 as usize {
                 // pos = [x, y, z]
@@ -225,133 +227,8 @@ impl Model {
             meshes.push(m);
         }
 
-        // TODO: what was this doing?
-        // for (i, m) in materials.iter().enumerate() {
-        //     println!("material[{}].name = \'{}\'", i, m.name);
-        //     println!("    material.Ka = ({}, {}, {})", m.ambient[0], m.ambient[1], m.ambient[2]);
-        //     println!("    material.Kd = ({}, {}, {})", m.diffuse[0], m.diffuse[1], m.diffuse[2]);
-        //     println!("    material.Ks = ({}, {}, {})", m.specular[0], m.specular[1], m.specular[2]);
-        //     println!("    material.Ns = {}", m.shininess);
-        //     println!("    material.d = {}", m.dissolve);
-        //     println!("    material.map_Ka = {}", m.ambient_texture);
-        //     println!("    material.map_Kd = {}", m.diffuse_texture);
-        //     println!("    material.map_Ks = {}", m.specular_texture);
-        //     println!("    material.map_Ns = {}", m.normal_texture);
-        //     println!("    material.map_d = {}", m.dissolve_texture);
-        //     for (k, v) in &m.unknown_param {
-        //         println!("    material.{} = {}", k, v);
-        //     }
-        // }
-
-        Model { meshes: meshes, textures: textures}
-
-        // let f = match File::open(&path) {
-        //     Ok(file) => file,
-        //     Err(err) => panic!("Coudn not open {}: {}", path.display(), Error::description(&err)),
-        // };
-        //
-        // let file = BufReader::new(&f);
-        //
-        // let mut vertices: Vec<Vec3> = Vec::new();
-        // // let mut norm: Vec<Vec3> = Vec::new();
-        // let mut indices: Vec<u32> = Vec::new();
-        // // let mut elements: Vec<u32> = Vec::new();
-        // let mut normals: Vec<Vec3> = Vec::new();
-        //
-        // for l in file.lines() {
-        //     let line = l.unwrap();
-        //
-        //     if &line[0..2] == "v " {
-        //         let l = &line[2..];
-        //
-        //         let splits: Vec<&str> = l.split(' ').collect();
-        //
-        //         let x: f32 = splits[0].to_string().parse().unwrap();
-        //         let y: f32 = splits[1].to_string().parse().unwrap();
-        //         let z: f32 = splits[2].to_string().parse().unwrap();
-        //
-        //         vertices.push(Vec3::new(x, y, z));
-        //
-        //     // } else if &line[0..3] == "vn " {
-        //     //     let l = &line[3..];
-        //     //
-        //     //     let splits: Vec<&str> = l.split(' ').collect();
-        //     //
-        //     //     let x: f32 = splits[0].to_string().parse().unwrap();
-        //     //     let y: f32 = splits[1].to_string().parse().unwrap();
-        //     //     let z: f32 = splits[2].to_string().parse().unwrap();
-        //     //
-        //     //     norm.push(Vec3::new(x, y, z));
-        //
-        //
-        //     } else if &line[0..2] == "f " {
-        //
-        //         let l = &line[2..];
-        //
-        //         let splits: Vec<&str> = l.split(' ').collect();
-        //
-        //         let mut a = Model::handle_split(splits[0]);
-        //         let mut b = Model::handle_split(splits[0]);
-        //         let mut c = Model::handle_split(splits[0]);
-        //
-        //         a -= 1;
-        //         b -= 1;
-        //         c -= 1;
-        //
-        //         indices.push(a); indices.push(b); indices.push(c);
-        //     }
-        // }
-        //
-        // normals.resize(vertices.len(), Vec3::new(0.0, 0.0, 0.0));
-        //
-        // for i in 0..indices.len()/3 {
-        //
-        //     // println!("{:?}, {:?}, {:?}", i * 3, i * 3 + 1, i * 3 + 2);
-        //
-        //     let ia: usize = indices[i * 3] as usize;
-        //     let ib: usize = indices[i * 3 + 1] as usize;
-        //     let ic: usize = indices[i * 3 + 2] as usize;
-        //
-        //     // let mut normal: Vec3 = vertices[ib] - vertices[ia];
-        //     let normal = Vec3::cross(vertices[ib] - vertices[ia], vertices[ic] - vertices[ia]);
-        //     // glm::vec3 normal = glm::normalize(glm::cross( glm::vec3(vertices[ib]) - glm::vec3(vertices[ia]), glm::vec3(vertices[ic]) - glm::vec3(vertices[ia])));
-        //     normals[ia] = normal;
-        //     normals[ib] = normal;
-        //     normals[ic] = normal;
-        // }
-        //
-        // let mut v: Vec<Vertex> = Vec::new();
-        // for i in 0..vertices.len() {
-        //     let vertex = Vertex { position: vertices[i], normal: normals[i] };
-        //     v.push(vertex);
-        // }
-        //
-        // Model {vertices: v, indices: indices }
+        Model { meshes, textures }
     }
-    // fn handle_split(split: &str) -> u32 {
-    //     let mut slashes = 0;
-    //
-    //     let mut string1 = String::new();
-    //     let mut string2 = String::new();
-    //
-    //     // println!("{:?}", split);
-    //
-    //     for c in split.chars() {
-    //         if slashes == 0 && c != '/'{
-    //             string1.push(c);
-    //         } else if slashes == 2 {
-    //             string2.push(c);
-    //         } else if c == '/'{
-    //             slashes += 1;
-    //         }
-    //     }
-    //
-    //     // println!("{:?}, {:?}", string1, string2);
-    //
-    //     let a: u32 = string1.parse().unwrap();
-    //     // let b: u32 = string2.parse().unwrap();
-    //     a
-    // }
 
     pub unsafe fn draw(&self) {
         for i in 0..self.meshes.len() {

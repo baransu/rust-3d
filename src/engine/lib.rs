@@ -1,3 +1,5 @@
+#[macro_use] extern crate itertools;
+
 pub mod camera;
 pub mod framebuffer;
 pub mod lights;

@@ -11,7 +11,6 @@ use std::ptr;
 
 use self::math::mat4::Mat4;
 use self::math::vec3::Vec3;
-
 use self::gl::types::*;
 
 #[derive(Debug)]

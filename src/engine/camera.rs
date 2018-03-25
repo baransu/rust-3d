@@ -25,31 +25,29 @@ impl Camera {
     }
 
     pub fn get_look_at_target_matrix(&mut self, target: Vec3) -> Mat4 {
-
-        let roll = self.rotation.x;
+        let roll = self.rotation.x.to_radians();
 
         self.up = Vec3::new(0.0, 1.0, 0.0);
-        self.up.x = roll.to_radians().sin();
-        self.up.y = roll.to_radians().cos();
+        self.up.x = roll.sin();
+        self.up.y = roll.cos();
         self.up.z = 0.0;
 
         Mat4::from_look_at(self.position, target, self.up)
     }
 
     pub fn get_look_at_matrix(&mut self) -> Mat4 {
+        let roll = self.rotation.x.to_radians();
+        let pitch = self.rotation.y.to_radians();
+        let yaw = self.rotation.z.to_radians();
 
-        let roll = self.rotation.x;
-        let pitch = self.rotation.y;
-        let yaw = self.rotation.z;
-
-        self.forward.x = pitch.to_radians().cos() * yaw.to_radians().cos();
-        self.forward.y = pitch.to_radians().sin();
-        self.forward.z = pitch.to_radians().cos() * yaw.to_radians().sin();
+        self.forward.x = pitch.cos() * yaw.cos();
+        self.forward.y = pitch.sin();
+        self.forward.z = pitch.cos() * yaw.sin();
         self.forward = self.forward.normalize();
 
         self.up = Vec3::new(0.0, 1.0, 0.0);
-        self.up.x = roll.to_radians().sin();
-        self.up.y = roll.to_radians().cos();
+        self.up.x = roll.sin();
+        self.up.y = roll.cos();
         self.up.z = 0.0;
 
         self.right = Vec3::cross(self.forward, self.up).normalize();

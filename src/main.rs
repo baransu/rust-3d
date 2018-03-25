@@ -2,35 +2,16 @@ extern crate glutin;
 extern crate time;
 extern crate image;
 extern crate rand;
-
-// local
 extern crate math;
 extern crate engine;
 extern crate opengl as gl;
 
-use gl::types::*;
-
-use std::mem;
-use std::ptr;
-// use std::str;
-// use std::cmp;
-
 use glutin::*;
-
-use rand::Rng;
-
-// use cgmath::*;
-
-// use std::ffi::CString;
-//
-// use std::fs::File;
-
 
 // local
 use engine::framebuffer::Framebuffer;
 use engine::shader::Shader;
 use engine::skybox::Skybox;
-use engine::texture::Texture;
 use engine::transform::Transform;
 use engine::model::Model;
 use engine::camera::Camera;
@@ -39,7 +20,6 @@ use engine::scene::Scene;
 
 use math::mat4::Mat4;
 use math::vec3::Vec3;
-use math::vec2::Vec2;
 
 const WIDTH: f32 = 800.0;
 const HEIGHT: f32 = 600.0;
@@ -55,7 +35,7 @@ fn main() {
 
     let window = glutin::GlWindow::new(window_builder, context, &events_loop).unwrap();
 
-    window.set_cursor_position(WIDTH as i32 / 2, HEIGHT as i32 / 2);
+    window.set_cursor_position(WIDTH as i32 / 2, HEIGHT as i32 / 2).unwrap();
 
     window.set_cursor_state(CursorState::Grab).ok().expect(
         "could not grab mouse cursor",

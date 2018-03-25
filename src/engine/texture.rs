@@ -1,13 +1,9 @@
 extern crate opengl as gl;
 extern crate image;
 
-// use std::str;
 use std::mem;
-// use std::ptr;
 
-// use self::gl::types::*;
-
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Texture {
     texture_id: u32,
 }
@@ -38,8 +34,7 @@ impl Texture {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
             println!("Opening image: {}", texture_path);
-            let texture_data = image::open(texture_path).expect("Opening image for texture failed");
-            let texture_data = texture_data.to_rgba();
+            let texture_data = image::open(texture_path).expect("Opening image for texture failed").to_rgba();
 
             gl::TexImage2D(
                 gl::TEXTURE_2D,
