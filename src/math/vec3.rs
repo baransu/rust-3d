@@ -1,6 +1,6 @@
 use std::fmt;
 
-use std::ops::{ Sub, Add, Mul, Div };
+use std::ops::{Add, Div, Mul, Sub};
 
 use mat4::Mat4;
 
@@ -15,11 +15,7 @@ pub struct Vec3 {
 impl Vec3 {
     /// Returns new vec3
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
-        Vec3 {
-            x: x,
-            y: y,
-            z: z,
-        }
+        Vec3 { x: x, y: y, z: z }
     }
 
     pub fn from_vec(vec: Vec<f32>) -> Vec3 {
@@ -31,9 +27,18 @@ impl Vec3 {
     }
 
     pub fn multiply_mat(self, transform: Mat4) -> Vec3 {
-        let x = transform.elements[0 + 0 * 4] * self.x + transform.elements[0 + 1 * 4] * self.y + transform.elements[0 + 2 * 4] * self.z + transform.elements[0 + 3 * 4];
-        let y = transform.elements[1 + 0 * 4] * self.x + transform.elements[1 + 1 * 4] * self.y + transform.elements[2 + 2 * 4] * self.z + transform.elements[1 + 3 * 4];
-        let z = transform.elements[2 + 0 * 4] * self.x + transform.elements[2 + 1 * 4] * self.y + transform.elements[1 + 2 * 4] * self.z + transform.elements[2 + 3 * 4];
+        let x = transform.elements[0 + 0 * 4] * self.x
+            + transform.elements[0 + 1 * 4] * self.y
+            + transform.elements[0 + 2 * 4] * self.z
+            + transform.elements[0 + 3 * 4];
+        let y = transform.elements[1 + 0 * 4] * self.x
+            + transform.elements[1 + 1 * 4] * self.y
+            + transform.elements[2 + 2 * 4] * self.z
+            + transform.elements[1 + 3 * 4];
+        let z = transform.elements[2 + 0 * 4] * self.x
+            + transform.elements[2 + 1 * 4] * self.y
+            + transform.elements[1 + 2 * 4] * self.z
+            + transform.elements[2 + 3 * 4];
         Vec3 { x: x, y: y, z: z }
     }
 
@@ -64,9 +69,12 @@ impl Vec3 {
             let z = self.z / len;
             return Vec3 { x: x, y: y, z: z };
         }
-        Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
-
 }
 
 impl Mul for Vec3 {
@@ -116,7 +124,6 @@ impl Sub for Vec3 {
         }
     }
 }
-
 
 impl fmt::Debug for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

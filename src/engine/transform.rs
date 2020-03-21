@@ -1,7 +1,7 @@
 extern crate math;
 
-use self::math::vec3::Vec3;
 use self::math::mat4::Mat4;
+use self::math::vec3::Vec3;
 
 #[derive(Copy, Clone)]
 pub struct Transform {
@@ -13,7 +13,11 @@ pub struct Transform {
 
 impl Transform {
     pub fn new(position: Vec3, rotation: Vec3, scale: Vec3) -> Transform {
-        Transform { position: position, rotation: rotation, scale: scale }
+        Transform {
+            position: position,
+            rotation: rotation,
+            scale: scale,
+        }
     }
 
     fn calculate_model_matrix(self) -> Mat4 {
@@ -28,5 +32,4 @@ impl Transform {
     pub fn get_model_matrix(self) -> Mat4 {
         self.calculate_model_matrix()
     }
-
 }

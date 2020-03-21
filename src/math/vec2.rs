@@ -1,27 +1,24 @@
 use std::fmt;
 
-use std::ops::{ Sub, Add, Mul, Div };
+use std::ops::{Add, Div, Mul, Sub};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Vec2 {
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 impl Vec2 {
     /// Returns new Vec2
-    pub fn new(x: f32, y: f32 ) -> Vec2 {
-        Vec2 {
-            x: x,
-            y: y
-        }
+    pub fn new(x: f32, y: f32) -> Vec2 {
+        Vec2 { x: x, y: y }
     }
 
     pub fn from_vec(vec: Vec<f32>) -> Vec2 {
         Vec2 {
             x: vec[0],
-            y: vec[1]
+            y: vec[1],
         }
     }
 
@@ -46,7 +43,6 @@ impl Vec2 {
         }
         Vec2 { x: 0.0, y: 0.0 }
     }
-
 }
 
 impl Mul for Vec2 {
@@ -92,7 +88,6 @@ impl Sub for Vec2 {
         }
     }
 }
-
 
 impl fmt::Debug for Vec2 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

@@ -1,8 +1,7 @@
 use std::fmt;
 
+use std::ops::Mul;
 use vec3::Vec3;
-use std::ops::{ Mul };
-
 
 #[derive(Copy, Clone)]
 pub struct Mat4 {
@@ -14,9 +13,9 @@ impl Mat4 {
     pub fn new(value: f32) -> Mat4 {
         let mut elements: [f32; 16] = [0.0; 16];
         elements[0 + 0 * 4] = value;
-		elements[1 + 1 * 4] = value;
-		elements[2 + 2 * 4] = value;
-		elements[3 + 3 * 4] = value;
+        elements[1 + 1 * 4] = value;
+        elements[2 + 2 * 4] = value;
+        elements[3 + 3 * 4] = value;
         Mat4 { elements: elements }
     }
 
@@ -68,10 +67,12 @@ impl Mat4 {
         mat.elements[2 + 3 * 4] = translation.z;
 
         // mat
-        Mat4 { elements: mat.elements }
+        Mat4 {
+            elements: mat.elements,
+        }
     }
 
-    pub fn from_rotation(v: &Vec3) -> Mat4{
+    pub fn from_rotation(v: &Vec3) -> Mat4 {
         let mut mat = Mat4::new(1.0);
 
         // Roll = rotation about x axis
@@ -163,7 +164,6 @@ impl Mat4 {
         mat
     }
 
-
     #[inline]
     pub fn as_ptr(&self) -> *const f32 {
         &self.elements[0]
@@ -174,7 +174,6 @@ impl Mul for Mat4 {
     type Output = Mat4;
 
     fn mul(self, other: Mat4) -> Mat4 {
-
         let mut data: [f32; 16] = [0.0; 16];
 
         for row in 0..4 {
@@ -193,11 +192,25 @@ impl Mul for Mat4 {
 
 impl fmt::Debug for Mat4 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-        "[ {}, {}, {}, {}\n  {}, {}, {}, {}\n  {}, {}, {}, {}\n  {}, {}, {}, {} ]",
-        self.elements[0], self.elements[1], self.elements[2], self.elements[3],
-        self.elements[4], self.elements[5], self.elements[6], self.elements[7],
-        self.elements[8], self.elements[9], self.elements[10], self.elements[11],
-        self.elements[12], self.elements[13], self.elements[14], self.elements[15])
+        write!(
+            f,
+            "[ {}, {}, {}, {}\n  {}, {}, {}, {}\n  {}, {}, {}, {}\n  {}, {}, {}, {} ]",
+            self.elements[0],
+            self.elements[1],
+            self.elements[2],
+            self.elements[3],
+            self.elements[4],
+            self.elements[5],
+            self.elements[6],
+            self.elements[7],
+            self.elements[8],
+            self.elements[9],
+            self.elements[10],
+            self.elements[11],
+            self.elements[12],
+            self.elements[13],
+            self.elements[14],
+            self.elements[15]
+        )
     }
 }

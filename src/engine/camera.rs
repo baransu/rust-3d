@@ -1,7 +1,7 @@
 extern crate math;
 
-use self::math::vec3::Vec3;
 use self::math::mat4::Mat4;
+use self::math::vec3::Vec3;
 
 pub struct Camera {
     pub position: Vec3,
@@ -9,7 +9,6 @@ pub struct Camera {
     pub forward: Vec3,
     pub right: Vec3,
     pub up: Vec3,
-
     // TODO: projection and view matrices
 }
 

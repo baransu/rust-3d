@@ -4,8 +4,8 @@ use model::Model;
 use shader::Shader;
 use transform::Transform;
 
-use self::math::vec3::Vec3;
 use self::math::mat4::Mat4;
+use self::math::vec3::Vec3;
 
 pub struct DirLight {
     pub direction: Vec3,
@@ -21,7 +21,7 @@ impl DirLight {
             direction: direction,
             ambient: ambient,
             diffuse: diffuse,
-            specular: specular
+            specular: specular,
         }
     }
 }
@@ -43,12 +43,22 @@ pub struct PointLight {
 }
 
 impl PointLight {
-    pub fn new(position: Vec3, linear: f32, quadratic: f32, ambient: Vec3, diffuse: Vec3, specular: Vec3) -> PointLight {
-
+    pub fn new(
+        position: Vec3,
+        linear: f32,
+        quadratic: f32,
+        ambient: Vec3,
+        diffuse: Vec3,
+        specular: Vec3,
+    ) -> PointLight {
         let shader = Shader::new("res/lightShader.vert", "res/lightShader.frag");
         let model = Model::new("res/models/cube.obj");
 
-        let transform = Transform::new(position, Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.25, 0.25, 0.25));
+        let transform = Transform::new(
+            position,
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.25, 0.25, 0.25),
+        );
 
         // setup model and shaders for rendering
         PointLight {
@@ -65,7 +75,6 @@ impl PointLight {
             transform: transform,
             shader: shader,
             model: model,
-
         }
     }
 
@@ -80,11 +89,13 @@ impl PointLight {
 
         self.shader.set_uniform_matrix4fv("projection", projection);
         self.shader.set_uniform_matrix4fv("view", view);
-        self.shader.set_uniform_matrix4fv("model", self.transform.get_model_matrix());
+        self.shader
+            .set_uniform_matrix4fv("model", self.transform.get_model_matrix());
 
-        unsafe { self.model.draw(); }
+        unsafe {
+            self.model.draw();
+        }
 
         self.shader.unbind();
     }
-
 }

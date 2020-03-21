@@ -2,25 +2,25 @@ extern crate math;
 extern crate opengl as gl;
 
 use std::error::Error;
-use std::io::prelude::*;
-use std::fs::File;
-use std::path::Path;
-use std::str;
 use std::ffi::CString;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 use std::ptr;
+use std::str;
 
+use self::gl::types::*;
 use self::math::mat4::Mat4;
 use self::math::vec3::Vec3;
-use self::gl::types::*;
 
 #[derive(Debug)]
 pub struct Shader {
-    pub program: u32
+    pub program: u32,
 }
 
 impl Drop for Shader {
     fn drop(&mut self) {
-        unsafe { gl::DeleteProgram(self.program) } ;
+        unsafe { gl::DeleteProgram(self.program) };
     }
 }
 
@@ -37,8 +37,12 @@ impl Shader {
 
             let mut vertex_shader_src = String::new();
             match vertex_shader_file.read_to_string(&mut vertex_shader_src) {
-                Ok(_) => { }
-                Err(err) => panic!("Coudn't read_to_string {}: {}", display, Error::description(&err)),
+                Ok(_) => {}
+                Err(err) => panic!(
+                    "Coudn't read_to_string {}: {}",
+                    display,
+                    Error::description(&err)
+                ),
             };
 
             // load fshader from file
@@ -50,13 +54,17 @@ impl Shader {
             };
             let mut fragment_shader_src = String::new();
             match fragment_shader_file.read_to_string(&mut fragment_shader_src) {
-                Ok(_) => { }
-                Err(err) => panic!("Coudn't read_to_string {}: {}", display, Error::description(&err)),
+                Ok(_) => {}
+                Err(err) => panic!(
+                    "Coudn't read_to_string {}: {}",
+                    display,
+                    Error::description(&err)
+                ),
             };
 
-
             let vertex_shader = Shader::compile_shader(&vertex_shader_src[..], gl::VERTEX_SHADER);
-            let fragment_shader = Shader::compile_shader(&fragment_shader_src[..], gl::FRAGMENT_SHADER);
+            let fragment_shader =
+                Shader::compile_shader(&fragment_shader_src[..], gl::FRAGMENT_SHADER);
             let program = Shader::link_program(vertex_shader, fragment_shader);
 
             gl::DeleteShader(vertex_shader);
@@ -68,15 +76,15 @@ impl Shader {
 
     // bind
     pub fn bind(&self) {
-        unsafe { gl::UseProgram(self.program) } ;
+        unsafe { gl::UseProgram(self.program) };
     }
 
     pub fn unbind(&self) {
-        unsafe { gl::UseProgram(0) } ;
+        unsafe { gl::UseProgram(0) };
     }
 
     pub fn delete(&self) {
-        unsafe { gl::DeleteProgram(self.program) } ;
+        unsafe { gl::DeleteProgram(self.program) };
     }
 
     // uniforms
@@ -114,7 +122,6 @@ impl Shader {
 
     // TODO: set camera (projection, view)
     // TODO: set lights (directional, point)
-
 }
 
 impl Shader {
@@ -138,8 +145,18 @@ impl Shader {
             gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
             let mut buf = Vec::with_capacity(len as usize);
             buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
-            gl::GetShaderInfoLog(shader, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
-            panic!("{}", str::from_utf8(&buf).ok().expect("ShaderIngoLog not valid for utf8"));
+            gl::GetShaderInfoLog(
+                shader,
+                len,
+                ptr::null_mut(),
+                buf.as_mut_ptr() as *mut GLchar,
+            );
+            panic!(
+                "{}",
+                str::from_utf8(&buf)
+                    .ok()
+                    .expect("ShaderIngoLog not valid for utf8")
+            );
         }
         shader
     }
@@ -159,10 +176,19 @@ impl Shader {
             gl::GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut len);
             let mut buf = Vec::with_capacity(len as usize);
             buf.set_len((len as usize) - 1); // subtract 1 to skip the trailing null character
-            gl::GetProgramInfoLog(program, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
-            panic!("{}", str::from_utf8(&buf).ok().expect("ProgramInfoLog not valid utf8"));
+            gl::GetProgramInfoLog(
+                program,
+                len,
+                ptr::null_mut(),
+                buf.as_mut_ptr() as *mut GLchar,
+            );
+            panic!(
+                "{}",
+                str::from_utf8(&buf)
+                    .ok()
+                    .expect("ProgramInfoLog not valid utf8")
+            );
         }
         program
     }
-
 }

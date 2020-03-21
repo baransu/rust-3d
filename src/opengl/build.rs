@@ -1,6 +1,6 @@
 extern crate gl_generator;
 
-use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};
+use gl_generator::{Api, Fallbacks, GlobalGenerator, Profile, Registry};
 use std::env;
 use std::fs::File;
 use std::path::Path;
@@ -9,7 +9,11 @@ fn main() {
     let dest = env::var("OUT_DIR").unwrap();
     let mut file = File::create(&Path::new(&dest).join("gl_bindings.rs")).unwrap();
 
-    Registry::new(Api::Gl, (4, 5), Profile::Compatibility, Fallbacks::None,
+    Registry::new(
+        Api::Gl,
+        (4, 5),
+        Profile::Compatibility,
+        Fallbacks::None,
         vec![
             "GL_AMD_depth_clamp_separate",
             "GL_APPLE_vertex_array_object",
@@ -67,7 +71,8 @@ fn main() {
             "GL_NVX_gpu_memory_info",
             "GL_NV_conditional_render",
             "GL_NV_vertex_attrib_integer_64bit",
-        ])
-        .write_bindings(GlobalGenerator, &mut file)
-        .unwrap();
+        ],
+    )
+    .write_bindings(GlobalGenerator, &mut file)
+    .unwrap();
 }

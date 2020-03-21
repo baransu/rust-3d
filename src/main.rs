@@ -1,22 +1,22 @@
-extern crate glutin;
-extern crate time;
-extern crate image;
-extern crate rand;
-extern crate math;
 extern crate engine;
+extern crate glutin;
+extern crate image;
+extern crate math;
 extern crate opengl as gl;
+extern crate rand;
+extern crate time;
 
 use glutin::*;
 
 // local
+use engine::camera::Camera;
 use engine::framebuffer::Framebuffer;
+use engine::lights::{DirLight, PointLight};
+use engine::model::Model;
+use engine::scene::Scene;
 use engine::shader::Shader;
 use engine::skybox::Skybox;
 use engine::transform::Transform;
-use engine::model::Model;
-use engine::camera::Camera;
-use engine::lights::{PointLight, DirLight};
-use engine::scene::Scene;
 
 use math::mat4::Mat4;
 use math::vec3::Vec3;
@@ -25,7 +25,6 @@ const WIDTH: f32 = 800.0;
 const HEIGHT: f32 = 600.0;
 
 fn main() {
-
     let mut events_loop = glutin::EventsLoop::new();
     let window_builder = glutin::WindowBuilder::new()
         .with_title("rust-3d".to_string())
@@ -35,11 +34,14 @@ fn main() {
 
     let window = glutin::GlWindow::new(window_builder, context, &events_loop).unwrap();
 
-    window.set_cursor_position(WIDTH as i32 / 2, HEIGHT as i32 / 2).unwrap();
+    window
+        .set_cursor_position(WIDTH as i32 / 2, HEIGHT as i32 / 2)
+        .unwrap();
 
-    window.set_cursor_state(CursorState::Grab).ok().expect(
-        "could not grab mouse cursor",
-    );
+    window
+        .set_cursor_state(CursorState::Grab)
+        .ok()
+        .expect("could not grab mouse cursor");
 
     // It is essential to make the context current before calling `gl::load_with`.
     unsafe { window.make_current() }.unwrap();
@@ -70,7 +72,6 @@ fn main() {
     // let model = Mod::new("res/models/", "susanne_lowpoly.obj");
     // let model = Mod::new("res/models/", "susanne_highpoly.obj");
     // let model = Model::new("res/models/mouse/", "mouselowpoly.obj");
-    
     let model = Model::new("res/models/ves/Ves.obj");
     // let model = Model::new("res/models/column.obj");
 
@@ -130,18 +131,15 @@ fn main() {
     // dir_light
     let dir_light = DirLight::new(
         Vec3::new(-0.2, -1.0, -0.3), //direction
-
-        Vec3::new(0.1, 0.1, 0.1), //ambient
+        Vec3::new(0.1, 0.1, 0.1),    //ambient
         Vec3::new(0.25, 0.25, 0.25), //diffuse
-        Vec3::new(0.2, 0.2, 0.2), //specular
+        Vec3::new(0.2, 0.2, 0.2),    //specular
     );
 
     let mut point_light = PointLight::new(
         Vec3::new(0.0, 1.0, 3.0), //position
-
-        0.08, //linear
-        0.032, //quadratic
-
+        0.08,                     //linear
+        0.032,                    //quadratic
         Vec3::new(0.1, 0.1, 0.1), //ambient
         Vec3::new(1.0, 0.0, 1.0), //diffuse
         Vec3::new(1.0, 1.0, 1.0), //specular
@@ -161,7 +159,6 @@ fn main() {
     let mut time = 0.0;
 
     while running {
-
         // Process input
         input(&pressed_keys, &mut camera);
 
@@ -181,7 +178,7 @@ fn main() {
             framebuffer.bind();
 
             // gl::Enable(gl::CULL_FACE);
-            // gl::FrontFace(gl::CW); 
+            // gl::FrontFace(gl::CW);
             // gl::CullFace(gl::FRONT_AND_BACK);
 
             gl::ClearColor(44.0 / 255.0, 44.0 / 255.0, 44.0 / 255.0, 1.0);
@@ -263,64 +260,60 @@ fn main() {
         window.swap_buffers().unwrap();
 
         events_loop.poll_events(|event| match event {
-            glutin::Event::DeviceEvent { event, .. } => {
-                match event { 
-                    glutin::DeviceEvent::MouseMotion { delta: (x, y) } => {
-                        let sensitivity = 0.01;
+            glutin::Event::DeviceEvent { event, .. } => match event {
+                glutin::DeviceEvent::MouseMotion { delta: (x, y) } => {
+                    let sensitivity = 0.01;
 
-                        camera.rotation.z += (x as f32) * sensitivity;
-                        camera.rotation.y -= (y as f32) * sensitivity;
+                    camera.rotation.z += (x as f32) * sensitivity;
+                    camera.rotation.y -= (y as f32) * sensitivity;
 
-                        if camera.rotation.y > 89.0 {
-                            camera.rotation.y = 89.0;
-                        } else if camera.rotation.y < -89.0 {
-                            camera.rotation.y = -89.0;
-                        }
+                    if camera.rotation.y > 89.0 {
+                        camera.rotation.y = 89.0;
+                    } else if camera.rotation.y < -89.0 {
+                        camera.rotation.y = -89.0;
                     }
-
-                    _ => {}
-
                 }
-            }
 
-            glutin::Event::WindowEvent { event, .. } => {
-                match event {
-                    glutin::WindowEvent::Closed => running = false,
-                    glutin::WindowEvent::Resized(w, h) => window.resize(w, h),
+                _ => {}
+            },
 
-                    WindowEvent::KeyboardInput {
-                        input: glutin::KeyboardInput {
+            glutin::Event::WindowEvent { event, .. } => match event {
+                glutin::WindowEvent::Closed => running = false,
+                glutin::WindowEvent::Resized(w, h) => window.resize(w, h),
+
+                WindowEvent::KeyboardInput {
+                    input:
+                        glutin::KeyboardInput {
                             virtual_keycode,
                             state: ElementState::Pressed,
                             ..
                         },
-                        ..
-                    } => {
-                        if let Some(x) = virtual_keycode {
-                            pressed_keys[x as usize] = true;
-                            if is_pressed(&pressed_keys, VirtualKeyCode::Escape) {
-                                running = false;
-                            }
-
+                    ..
+                } => {
+                    if let Some(x) = virtual_keycode {
+                        pressed_keys[x as usize] = true;
+                        if is_pressed(&pressed_keys, VirtualKeyCode::Escape) {
+                            running = false;
                         }
                     }
+                }
 
-                    WindowEvent::KeyboardInput {
-                        input: glutin::KeyboardInput {
+                WindowEvent::KeyboardInput {
+                    input:
+                        glutin::KeyboardInput {
                             virtual_keycode,
                             state: ElementState::Released,
                             ..
                         },
-                        ..
-                    } => {
-                        if let Some(x) = virtual_keycode {
-                            pressed_keys[x as usize] = false;
-                        }
+                    ..
+                } => {
+                    if let Some(x) = virtual_keycode {
+                        pressed_keys[x as usize] = false;
                     }
-
-                    _ => {}
                 }
-            } 
+
+                _ => {}
+            },
             _ => {}
         });
     }
@@ -331,25 +324,25 @@ fn input(keys: &[bool; 1024], camera: &mut Camera) {
     let temp_cam_front = Vec3::new(camera.forward.x, 0.0, camera.forward.z);
 
     if is_pressed(keys, VirtualKeyCode::A) {
-        camera.position = camera.position -
-            Vec3::cross(camera.forward, camera.up).normalize() *
-                Vec3::new(camera_speed, camera_speed, camera_speed);
+        camera.position = camera.position
+            - Vec3::cross(camera.forward, camera.up).normalize()
+                * Vec3::new(camera_speed, camera_speed, camera_speed);
     }
 
     if is_pressed(keys, VirtualKeyCode::D) {
-        camera.position = camera.position +
-            Vec3::cross(camera.forward, camera.up).normalize() *
-                Vec3::new(camera_speed, camera_speed, camera_speed);
+        camera.position = camera.position
+            + Vec3::cross(camera.forward, camera.up).normalize()
+                * Vec3::new(camera_speed, camera_speed, camera_speed);
     }
 
     if is_pressed(keys, VirtualKeyCode::W) {
-        camera.position = camera.position +
-            temp_cam_front * Vec3::new(camera_speed, camera_speed, camera_speed);
+        camera.position =
+            camera.position + temp_cam_front * Vec3::new(camera_speed, camera_speed, camera_speed);
     }
 
     if is_pressed(keys, VirtualKeyCode::S) {
-        camera.position = camera.position -
-            temp_cam_front * Vec3::new(camera_speed, camera_speed, camera_speed);
+        camera.position =
+            camera.position - temp_cam_front * Vec3::new(camera_speed, camera_speed, camera_speed);
     }
 
     if is_pressed(keys, VirtualKeyCode::Q) {
