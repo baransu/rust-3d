@@ -2,22 +2,20 @@ extern crate image;
 extern crate math;
 extern crate opengl as gl;
 
-use self::gl::types::*;
-use self::math::mat4::Mat4;
+use camera::Camera;
 use model::Model;
-use shader::Shader;
+use shader::ShaderProgram;
 use std::mem;
 
 pub struct Skybox {
-  shader: Shader,
+  shader: SkyboxShader,
   model: Model,
   texture: u32,
 }
 
 impl Skybox {
   pub fn new(faces: Vec<&str>) -> Skybox {
-    let mut model = Model::new("res/models/cube.obj");
-    let mut shader = Shader::new("res/skybox.vert", "res/skybox.frag");
+    let model = Model::from_obj("res/models/cube.obj");
 
     let mut texture = 0;
 
@@ -81,18 +79,13 @@ impl Skybox {
 
     Skybox {
       model,
-      shader,
+      shader: SkyboxShader::new(),
       texture,
     }
   }
 
-  pub fn draw(&self, projection_matrix: Mat4, view_matrix: Mat4) {
-    self.shader.bind();
-    self
-      .shader
-      .set_uniform_matrix4fv("projection", projection_matrix);
-    self.shader.set_uniform_matrix4fv("view", view_matrix);
-    self.shader.set_uniform_1i("skybox", 0);
+  pub fn render(&self, camera: &Camera) {
+    self.shader.bind(&camera);
 
     unsafe {
       gl::DepthMask(gl::FALSE);
@@ -100,10 +93,33 @@ impl Skybox {
       gl::BindTexture(gl::TEXTURE_CUBE_MAP, self.texture);
     }
 
-    unsafe {
-      self.model.draw();
+    self.model.render();
 
+    unsafe {
       gl::DepthMask(gl::TRUE);
     }
+  }
+}
+
+struct SkyboxShader {
+  shader: ShaderProgram,
+}
+
+impl SkyboxShader {
+  pub fn new() -> SkyboxShader {
+    SkyboxShader {
+      shader: ShaderProgram::new("res/skybox.vert", "res/skybox.frag"),
+    }
+  }
+
+  pub fn bind(&self, camera: &Camera) {
+    self.shader.bind();
+    self
+      .shader
+      .set_uniform_matrix4fv("projection", camera.projection_matrix);
+    self
+      .shader
+      .set_uniform_matrix4fv("view", camera.get_look_at_matrix());
+    self.shader.set_uniform_1i("skybox", 0)
   }
 }

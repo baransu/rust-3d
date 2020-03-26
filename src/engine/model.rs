@@ -5,17 +5,17 @@ extern crate tobj;
 use self::gl::types::*;
 use self::math::vec2::Vec2;
 use self::math::vec3::Vec3;
-use self::tobj::*;
+// use self::tobj::*;
 use itertools::Itertools;
 use texture::Texture;
 
 use std::collections::HashMap;
-use std::error::Error;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
+// use std::error::Error;
+// use std::fs::File;
+// use std::io::prelude::*;
+// use std::io::BufReader;
 use std::mem;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::ptr;
 
 #[derive(Eq, Clone, Debug, PartialEq)]
@@ -24,11 +24,13 @@ struct TextureRequest {
     path: String,
 }
 
+#[derive(Debug)]
 pub struct Model {
     meshes: Vec<Mesh>,
     textures: HashMap<String, Texture>,
 }
 
+#[derive(Debug)]
 struct Mesh {
     vertices: Vec<Vertex>,
     indices: Vec<u32>,
@@ -40,6 +42,7 @@ struct Mesh {
     normal: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct Vertex {
     pub position: Vec3,
     pub texcoord: Vec2,
@@ -63,7 +66,7 @@ fn create_texture_request(path: &Path, texture_name: String) -> TextureRequest {
 }
 
 impl Model {
-    pub fn new(file_path: &str) -> Model {
+    pub fn from_obj(file_path: &str) -> Model {
         let path = Path::new(file_path);
         let object = tobj::load_obj(path);
         let (models, materials) = object.unwrap();
@@ -72,7 +75,7 @@ impl Model {
 
         let mut textures: HashMap<String, Texture> = HashMap::new();
 
-        let mut texture_requests: Vec<TextureRequest> = materials
+        let texture_requests: Vec<TextureRequest> = materials
             .iter()
             .flat_map(|m| {
                 let material = m.clone();
@@ -236,10 +239,8 @@ impl Model {
         Model { meshes, textures }
     }
 
-    pub unsafe fn draw(&self) {
+    pub fn render(&self) {
         for i in 0..self.meshes.len() {
-            //TODO: shaders
-
             // textures
             if let Some(ref albedo) = self.meshes[i].albedo {
                 if let Some(texture) = self.textures.get(albedo) {
@@ -259,7 +260,7 @@ impl Model {
                 };
             };
 
-            self.meshes[i].draw();
+            self.meshes[i].render();
         }
     }
 }
@@ -280,7 +281,6 @@ impl Mesh {
             gl::GenVertexArrays(1, &mut self.vao);
             gl::GenBuffers(1, &mut self.vbo);
             gl::GenBuffers(1, &mut self.ebo);
-
             gl::BindVertexArray(self.vao);
 
             // Create a Vertex Buffer Object and copy the vertex data to it
@@ -355,14 +355,16 @@ impl Mesh {
         }
     }
 
-    unsafe fn draw(&self) {
-        gl::BindVertexArray(self.vao);
-        gl::DrawElements(
-            gl::TRIANGLES,
-            self.indices.len() as i32,
-            gl::UNSIGNED_INT,
-            ptr::null(),
-        );
-        gl::BindVertexArray(0);
+    fn render(&self) {
+        unsafe {
+            gl::BindVertexArray(self.vao);
+            gl::DrawElements(
+                gl::TRIANGLES,
+                self.indices.len() as i32,
+                gl::UNSIGNED_INT,
+                ptr::null(),
+            );
+            gl::BindVertexArray(0);
+        }
     }
 }

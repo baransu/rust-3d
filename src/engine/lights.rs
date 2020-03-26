@@ -1,7 +1,7 @@
 extern crate math;
 
 use model::Model;
-use shader::Shader;
+use shader::ShaderProgram;
 use transform::Transform;
 
 use self::math::mat4::Mat4;
@@ -37,9 +37,9 @@ pub struct PointLight {
     pub diffuse: Vec3,
     pub specular: Vec3,
 
-    transform: Transform,
+    // transform: Transform,
     model: Model,
-    shader: Shader,
+    shader: ShaderProgram,
 }
 
 impl PointLight {
@@ -51,14 +51,8 @@ impl PointLight {
         diffuse: Vec3,
         specular: Vec3,
     ) -> PointLight {
-        let shader = Shader::new("res/lightShader.vert", "res/lightShader.frag");
-        let model = Model::new("res/models/cube.obj");
-
-        let transform = Transform::new(
-            position,
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.25, 0.25, 0.25),
-        );
+        let shader = ShaderProgram::new("res/lightShader.vert", "res/lightShader.frag");
+        let model = Model::from_obj("res/models/cube.obj");
 
         // setup model and shaders for rendering
         PointLight {
@@ -72,16 +66,22 @@ impl PointLight {
             diffuse: diffuse,
             specular: specular,
 
-            transform: transform,
+            // transform: transform,
             shader: shader,
             model: model,
         }
     }
 
-    pub fn draw(&mut self, projection: Mat4, view: Mat4) {
+    pub fn render(&self, projection: Mat4, view: Mat4) {
         self.shader.bind();
 
-        self.transform.position = self.position;
+        let transform = Transform::new(
+            self.position,
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.25, 0.25, 0.25),
+        );
+
+        // self.transform.position = self.position;
         // matrices
 
         // ligth color
@@ -90,11 +90,9 @@ impl PointLight {
         self.shader.set_uniform_matrix4fv("projection", projection);
         self.shader.set_uniform_matrix4fv("view", view);
         self.shader
-            .set_uniform_matrix4fv("model", self.transform.get_model_matrix());
+            .set_uniform_matrix4fv("model", transform.get_model_matrix());
 
-        unsafe {
-            self.model.draw();
-        }
+        self.model.render();
 
         self.shader.unbind();
     }

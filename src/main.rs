@@ -10,25 +10,27 @@ use glutin::*;
 
 // local
 use engine::camera::Camera;
-use engine::framebuffer::Framebuffer;
+use engine::entity::Entity;
+use engine::render_context::RenderContext;
+// use engine::framebuffer::Framebuffer;
 use engine::lights::{DirLight, PointLight};
 use engine::model::Model;
-use engine::scene::Scene;
-use engine::shader::Shader;
+// use engine::scene::Scene;
+// use engine::shader::Shader;
 use engine::skybox::Skybox;
 use engine::transform::Transform;
 
-use math::mat4::Mat4;
+// use math::mat4::Mat4;
 use math::vec3::Vec3;
 
-const WIDTH: f32 = 800.0;
-const HEIGHT: f32 = 600.0;
+const WIDTH: f32 = 1280.0;
+const HEIGHT: f32 = 720.0;
 
 fn main() {
     let mut events_loop = glutin::EventsLoop::new();
     let window_builder = glutin::WindowBuilder::new()
         .with_title("rust-3d".to_string())
-        .with_dimensions(1024, 768);
+        .with_dimensions(WIDTH as u32, HEIGHT as u32);
 
     let context = glutin::ContextBuilder::new().with_vsync(true);
 
@@ -55,10 +57,16 @@ fn main() {
     // input stuff
     let mut pressed_keys: [bool; 1024] = [false; 1024];
 
-    let mut camera = Camera::new(Vec3::new(0.0, 0.0, 20.0), Vec3::new(0.0, 0.0, -90.0));
+    let mut camera = Camera::new(
+        WIDTH,
+        HEIGHT,
+        Vec3::new(0.0, 0.0, 20.0),
+        Vec3::new(0.0, 0.0, -90.0),
+    );
 
     // ves shader
-    let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
+    // let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
+    // let model = Model::from_obj("res/models/ves/Ves.obj");
 
     // columns shader
     // let shader = Shader::new("res/vshader.vert", "res/handpainted.frag");
@@ -67,12 +75,11 @@ fn main() {
     // let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
     // let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
 
-    let mut entities = Vec::new();
+    // let mut entities = Vec::new();
 
     // let model = Mod::new("res/models/", "susanne_lowpoly.obj");
     // let model = Mod::new("res/models/", "susanne_highpoly.obj");
     // let model = Model::new("res/models/mouse/", "mouselowpoly.obj");
-    let model = Model::new("res/models/ves/Ves.obj");
     // let model = Model::new("res/models/column.obj");
 
     let mut forward = true;
@@ -97,36 +104,20 @@ fn main() {
     //     entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
     // }
 
-    entities.push(Transform::new(
-        Vec3::new(0.0, -5.0, 0.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(1.0, 1.0, 1.0),
-    ));
-    // entities.push(Transform::new(
+    let mut positions = vec![];
+    for x in 0..2 {
+        for z in 0..2 {
+            positions.push(Vec3::new(-5.0 * x as f32, -5.0, -5.0 * z as f32));
+        }
+    }
+
+    // let positions = vec![
     //     Vec3::new(0.0, -5.0, -5.0),
-    //     Vec3::new(0.0, 0.0, 0.0),
-    //     Vec3::new(1.0, 1.0, 1.0),
-    // ));
-    // entities.push(Transform::new(
     //     Vec3::new(0.0, -5.0, -10.0),
-    //     Vec3::new(0.0, 0.0, 0.0),
-    //     Vec3::new(1.0, 1.0, 1.0),
-    // ));
-    // entities.push(Transform::new(
     //     Vec3::new(0.0, -5.0, -15.0),
-    //     Vec3::new(0.0, 0.0, 0.0),
-    //     Vec3::new(1.0, 1.0, 1.0),
-    // ));
-    // entities.push(Transform::new(
     //     Vec3::new(0.0, -5.0, -20.0),
-    //     Vec3::new(0.0, 0.0, 0.0),
-    //     Vec3::new(1.0, 1.0, 1.0),
-    // ));
-    // entities.push(Transform::new(
     //     Vec3::new(0.0, -5.0, -25.0),
-    //     Vec3::new(0.0, 0.0, 0.0),
-    //     Vec3::new(1.0, 1.0, 1.0),
-    // ));
+    // ];
 
     // dir_light
     let dir_light = DirLight::new(
@@ -145,116 +136,65 @@ fn main() {
         Vec3::new(1.0, 1.0, 1.0), //specular
     );
 
-    let framebuffer = Framebuffer::new(WIDTH as i32, HEIGHT as i32);
-    let skybox = Skybox::new(vec![
-        "res/cubemap_right.png",
-        "res/cubemap_left.png",
-        "res/cubemap_top.png",
-        "res/cubemap_bottom.png",
-        "res/cubemap_back.png",
-        "res/cubemap_front.png",
-    ]);
-
     let mut running = true;
-    let mut time = 0.0;
+
+    let model = Model::from_obj("res/models/ves/Ves.obj");
+    let mut entities: Vec<Entity> = positions
+        .iter()
+        .map(|position| {
+            let transform = Transform::new(
+                *position,
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(1.0, 1.0, 1.0),
+            );
+
+            Entity::new(transform, &model)
+        })
+        .collect();
+
+    let render_context = RenderContext::new(
+        WIDTH as i32,
+        HEIGHT as i32,
+        Skybox::new(vec![
+            "res/cubemap_right.png",
+            "res/cubemap_left.png",
+            "res/cubemap_top.png",
+            "res/cubemap_bottom.png",
+            "res/cubemap_back.png",
+            "res/cubemap_front.png",
+        ]),
+    );
+
+    // let mut time = 0.0;
 
     while running {
         // Process input
         input(&pressed_keys, &mut camera);
 
-        time += 0.16;
-        let ts = time::get_time();
+        // time += 0.16;
+        // let ts = time::get_time();
         // println!("{:?}", ts.sec as f64);
-        let angle: f64 = ts.sec as f64 + ts.nsec as f64 / 1000000000.0;
+        // let angle: f64 = ts.sec as f64 + ts.nsec as f64 / 1000000000.0;
+
+        entities
+            .iter_mut()
+            .for_each(|entity| entity.transform.rotation.y += 5.0 * 0.16);
+        // rotation.y += 5.0 * 0.16;
         // println!("{:?}", time);
 
-        unsafe {
-            // near - as big as posible (0.1)
-            // far - as small as posible (100 - far and small enought)
-            let projection_matrix = Mat4::from_perspective(45.0, WIDTH / HEIGHT, 0.1, 100.0);
-            let view_matrix = camera.get_look_at_matrix();
+        render_context.render(&camera, &point_light, &dir_light, &entities);
 
-            // Bind offscreen framebuffer
-            framebuffer.bind();
+        // Update light position
+        if forward && point_light.position.z > -25.0 {
+            point_light.position.z -= 5.0 * 0.016;
+        } else if point_light.position.z < -25.0 {
+            forward = false;
+        }
 
-            // gl::Enable(gl::CULL_FACE);
-            // gl::FrontFace(gl::CW);
-            // gl::CullFace(gl::FRONT_AND_BACK);
-
-            gl::ClearColor(44.0 / 255.0, 44.0 / 255.0, 44.0 / 255.0, 1.0);
-            gl::Enable(gl::DEPTH_TEST);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-            // TODO: shoudn't it be before render loop?
-
-            // opengl forward is -z;
-            // let radius = 20.0;
-            // camera.position.x = (angle.cos() * radius) as f32;
-            // camera.position.z = (angle.sin() * radius) as f32;
-            // let view_matrix = camera.get_look_at_target_matrix(Vec3::new(0.0, 0.0, 0.0));
-
-            // Draw skybox
-            skybox.draw(projection_matrix, view_matrix);
-
-            // Draw scene
-            shader.bind();
-
-            // diffuse_map.bind(gl::TEXTURE0);
-            shader.set_uniform_1i("diffuseMap", 0);
-
-            // specular_map.bind(gl::TEXTURE1);
-            shader.set_uniform_1i("specularMap", 1);
-
-            // normal_map.bind(gl::TEXTURE2);
-            shader.set_uniform_1i("normalMap", 2);
-
-            shader.set_uniform_matrix4fv("projection", projection_matrix);
-            shader.set_uniform_matrix4fv("view", view_matrix);
-
-            shader.set_uniform_3f("lightPos", point_light.position);
-            shader.set_uniform_3f("viewPos", camera.position);
-
-            // directional light
-            shader.set_uniform_3f("dirLight.direction", dir_light.direction);
-            shader.set_uniform_3f("dirLight.ambient", dir_light.ambient);
-            shader.set_uniform_3f("dirLight.diffuse", dir_light.diffuse);
-            shader.set_uniform_3f("dirLight.specular", dir_light.specular);
-
-            shader.set_uniform_3f("pointLight.position", point_light.position);
-
-            shader.set_uniform_3f("pointLight.ambient", point_light.ambient);
-            shader.set_uniform_3f("pointLight.diffuse", point_light.diffuse);
-            shader.set_uniform_3f("pointLight.specular", point_light.specular);
-
-            shader.set_uniform_1f("pointLight.constant", point_light.constant);
-            shader.set_uniform_1f("pointLight.linear", point_light.linear);
-            shader.set_uniform_1f("pointLight.quadratic", point_light.quadratic);
-
-            for entity in &mut entities {
-                entity.rotation.y += 5.0 * 0.16;
-                // entity.rotation.z += 5.0 * 0.16;
-
-                shader.set_uniform_matrix4fv("model", entity.get_model_matrix());
-                model.draw();
-            }
-
-            // Update light position
-            if forward && point_light.position.z > -25.0 {
-                point_light.position.z -= 5.0 * 0.016;
-            } else if point_light.position.z < -25.0 {
-                forward = false;
-            }
-
-            if !forward && point_light.position.z < 0.0 {
-                point_light.position.z += 5.0 * 0.016;
-            } else if point_light.position.z > 0.0 {
-                forward = true;
-            }
-
-            point_light.draw(projection_matrix, view_matrix);
-
-            // Unbind and draw offscreen framebuffer
-            framebuffer.draw();
+        if !forward && point_light.position.z < 0.0 {
+            point_light.position.z += 5.0 * 0.016;
+        } else if point_light.position.z > 0.0 {
+            forward = true;
         }
 
         window.swap_buffers().unwrap();

@@ -8,7 +8,7 @@ pub struct Texture {
     texture_id: u32,
 }
 
-// TODO: do we have memory leaks here right now?
+// TODO: do we have memory leaks without this?
 // impl Drop for Texture {
 //     fn drop(&mut self) {
 //         unsafe { gl::DeleteTextures(1, &mut self.texture_id) } ;
@@ -18,7 +18,6 @@ pub struct Texture {
 impl Texture {
     pub fn new(texture_path: &str, anisotropy: f32) -> Texture {
         let mut texture_id = 0;
-        let mut current_anisotropy = 0.0;
 
         unsafe {
             gl::GenTextures(1, &mut texture_id);
@@ -60,13 +59,13 @@ impl Texture {
 
             // println!("max anisotropy: {:?}", max_anisotropy);
 
-            if anisotropy > max_anisotropy {
-                current_anisotropy = max_anisotropy;
+            let current_anisotropy = if anisotropy > max_anisotropy {
+                max_anisotropy
             } else if anisotropy < 0.0 {
-                current_anisotropy = 0.0;
+                0.0
             } else {
-                current_anisotropy = anisotropy;
-            }
+                anisotropy
+            };
 
             println!(
                 "Current anisotropy for {:?}: {:?}",

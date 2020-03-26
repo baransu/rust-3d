@@ -2,13 +2,13 @@ extern crate math;
 extern crate opengl as gl;
 
 use self::gl::types::*;
-use shader::Shader;
+use shader::ShaderProgram;
 use std::mem;
 use std::ptr;
 
 #[derive(Debug)]
 pub struct Framebuffer {
-  shader: Shader,
+  shader: ShaderProgram,
   fbo: u32,
   rbo: u32,
   fbo_quad_vao: u32,
@@ -18,7 +18,7 @@ pub struct Framebuffer {
 
 impl Framebuffer {
   pub fn new(width: i32, height: i32) -> Framebuffer {
-    let shader = Shader::new("res/framebuffer.vert", "res/framebuffer.frag");
+    let shader = ShaderProgram::new("res/framebuffer.vert", "res/framebuffer.frag");
 
     shader.bind();
     shader.set_uniform_1i("screenTexture", 0);
@@ -131,23 +131,27 @@ impl Framebuffer {
     }
   }
 
-  pub unsafe fn bind(&self) {
-    gl::BindFramebuffer(gl::FRAMEBUFFER, self.fbo);
+  pub fn bind(&self) {
+    unsafe {
+      gl::BindFramebuffer(gl::FRAMEBUFFER, self.fbo);
+    }
   }
 
-  pub unsafe fn draw(&self) {
-    self.shader.bind();
-    gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+  pub fn draw(&self) {
+    unsafe {
+      self.shader.bind();
+      gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 
-    gl::Disable(gl::DEPTH_TEST);
-    gl::ClearColor(1.0, 1.0, 1.0, 1.0);
-    gl::Clear(gl::COLOR_BUFFER_BIT);
+      gl::Disable(gl::DEPTH_TEST);
+      gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+      gl::Clear(gl::COLOR_BUFFER_BIT);
 
-    gl::BindVertexArray(self.fbo_quad_vao);
-    gl::ActiveTexture(gl::TEXTURE0);
-    gl::BindTexture(gl::TEXTURE_2D, self.texture);
-    gl::DrawArrays(gl::TRIANGLES, 0, 6);
-    gl::BindVertexArray(0);
+      gl::BindVertexArray(self.fbo_quad_vao);
+      gl::ActiveTexture(gl::TEXTURE0);
+      gl::BindTexture(gl::TEXTURE_2D, self.texture);
+      gl::DrawArrays(gl::TRIANGLES, 0, 6);
+      gl::BindVertexArray(0);
+    }
   }
 }
 

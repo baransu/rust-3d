@@ -3,7 +3,7 @@ extern crate math;
 use self::math::mat4::Mat4;
 use self::math::vec3::Vec3;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Transform {
     pub position: Vec3,
     // euler angles
@@ -20,16 +20,11 @@ impl Transform {
         }
     }
 
-    fn calculate_model_matrix(self) -> Mat4 {
+    pub fn get_model_matrix(self) -> Mat4 {
         let scale_matrix = Mat4::from_scale(&self.scale);
         let rotation_matrix = Mat4::from_rotation(&self.rotation);
         let translation_matrix = Mat4::from_translation(&self.position);
 
-        let model_matrix = scale_matrix * rotation_matrix * translation_matrix;
-        model_matrix
-    }
-
-    pub fn get_model_matrix(self) -> Mat4 {
-        self.calculate_model_matrix()
+        scale_matrix * rotation_matrix * translation_matrix
     }
 }
