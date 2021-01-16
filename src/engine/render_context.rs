@@ -27,7 +27,7 @@ impl RenderContext {
     camera: &Camera,
     point_light: &PointLight,
     dir_light: &DirLight,
-    entities: &Vec<Entity>,
+    entities: &Vec<&Entity>,
   ) {
     self.framebuffer.bind();
 
@@ -47,7 +47,7 @@ impl RenderContext {
     // render all models
     entities
       .iter()
-      .for_each(|entity| entity.render(&camera, &point_light, &dir_light));
+      .for_each(|entity| (**entity).render(&camera, &point_light, &dir_light));
 
     point_light.render(camera.projection_matrix, view_matrix);
 

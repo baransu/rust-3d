@@ -11,16 +11,12 @@ use glutin::*;
 // local
 use engine::camera::Camera;
 use engine::entity::Entity;
-use engine::render_context::RenderContext;
-// use engine::framebuffer::Framebuffer;
 use engine::lights::{DirLight, PointLight};
 use engine::model::Model;
-// use engine::scene::Scene;
-// use engine::shader::Shader;
+use engine::render_context::RenderContext;
 use engine::skybox::Skybox;
 use engine::transform::Transform;
 
-// use math::mat4::Mat4;
 use math::vec3::Vec3;
 
 const WIDTH: f32 = 1280.0;
@@ -47,12 +43,10 @@ fn main() {
 
     // It is essential to make the context current before calling `gl::load_with`.
     unsafe { window.make_current() }.unwrap();
+
     // Load the OpenGL function pointers
     // TODO: `as *const _` will not be needed once glutin is updated to the latest gl version
-    gl::load_with(|symbol| {
-        // println!("{:?}", symbol);
-        window.get_proc_address(symbol) as *const _
-    });
+    gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
     // input stuff
     let mut pressed_keys: [bool; 1024] = [false; 1024];
@@ -64,65 +58,26 @@ fn main() {
         Vec3::new(0.0, 0.0, -90.0),
     );
 
-    // ves shader
-    // let shader = Shader::new("res/vshader.vert", "res/fshader.frag");
-    // let model = Model::from_obj("res/models/ves/Ves.obj");
-
-    // columns shader
-    // let shader = Shader::new("res/vshader.vert", "res/handpainted.frag");
-
-    // let normal_map = Texture::new("res/mouse/mouseNormal.png", 4.0);
-    // let diffuse_map = Texture::new("res/mouse/mouseAlbedo.png", 4.0);
-    // let specular_map = Texture::new("res/mouse/mouseRoughness.png", 4.0);
-
-    // let mut entities = Vec::new();
-
-    // let model = Mod::new("res/models/", "susanne_lowpoly.obj");
-    // let model = Mod::new("res/models/", "susanne_highpoly.obj");
-    // let model = Model::new("res/models/mouse/", "mouselowpoly.obj");
-    // let model = Model::new("res/models/column.obj");
-
     let mut forward = true;
 
-    // for _ in 0..1 {
-    //
-    //     // x e<-5, 5>
-    //     let pos_x = rand::thread_rng().gen_range(-5.0, 6.0);
-    //     // y e<-5, 5>
-    //     let pos_y = rand::thread_rng().gen_range(-5.0, 6.0);
-    //     // z e<-10, 0>
-    //     let pos_z = rand::thread_rng().gen_range(-5.0, 6.0);
-    //
-    //     // rotaion e(1, 360)
-    //     let rot_x = rand::thread_rng().gen_range(1.0, 360.0);
-    //     let rot_y = rand::thread_rng().gen_range(1.0, 360.0);
-    //     let rot_z = rand::thread_rng().gen_range(1.0, 360.0);
-    //
-    //     // scale e<0.25, 1>
-    //     let scale = rand::thread_rng().gen_range(0.25, 1.25);
-    //
-    //     entities.push(Transform::new(Vec3::new(pos_x, pos_y, pos_z), Vec3::new(rot_x , rot_y, rot_z), Vec3::new(scale, scale, scale)));
-    // }
-
-    let mut positions = vec![];
-    for x in 0..2 {
-        for z in 0..2 {
-            positions.push(Vec3::new(-5.0 * x as f32, -5.0, -5.0 * z as f32));
+    let mut tiles = vec![];
+    for x in -5..5 {
+        for z in -5..5 {
+            tiles.push(Vec3::new(-2.0 * x as f32, -1.1, -2.0 * z as f32));
         }
     }
 
-    // let positions = vec![
-    //     Vec3::new(0.0, -5.0, -5.0),
-    //     Vec3::new(0.0, -5.0, -10.0),
-    //     Vec3::new(0.0, -5.0, -15.0),
-    //     Vec3::new(0.0, -5.0, -20.0),
-    //     Vec3::new(0.0, -5.0, -25.0),
-    // ];
+    let mut positions = vec![];
+    for x in -5..5 {
+        for z in -5..5 {
+            positions.push(Vec3::new(-2.0 * x as f32, 0.0, -2.0 * z as f32));
+        }
+    }
 
     // dir_light
     let dir_light = DirLight::new(
         Vec3::new(-0.2, -1.0, -0.3), //direction
-        Vec3::new(0.1, 0.1, 0.1),    //ambient
+        Vec3::new(0.6, 0.6, 0.6),    //ambient
         Vec3::new(0.25, 0.25, 0.25), //diffuse
         Vec3::new(0.2, 0.2, 0.2),    //specular
     );
@@ -138,8 +93,10 @@ fn main() {
 
     let mut running = true;
 
-    let model = Model::from_obj("res/models/ves/Ves.obj");
-    let mut entities: Vec<Entity> = positions
+    let ves = Model::from_obj("res/models/ves/Ves.obj");
+    let floor = Model::from_obj("res/models/plane.obj");
+
+    let mut characters: Vec<Entity> = positions
         .iter()
         .map(|position| {
             let transform = Transform::new(
@@ -148,7 +105,20 @@ fn main() {
                 Vec3::new(1.0, 1.0, 1.0),
             );
 
-            Entity::new(transform, &model)
+            Entity::new(transform, &ves)
+        })
+        .collect();
+
+    let ground: Vec<Entity> = tiles
+        .iter()
+        .map(|position| {
+            let transform = Transform::new(
+                *position,
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(1.0, 1.0, 1.0),
+            );
+
+            Entity::new(transform, &floor)
         })
         .collect();
 
@@ -165,35 +135,30 @@ fn main() {
         ]),
     );
 
-    // let mut time = 0.0;
+    let delta_time: f32 = 16.0 / 1000.0;
 
     while running {
         // Process input
         input(&pressed_keys, &mut camera);
 
-        // time += 0.16;
-        // let ts = time::get_time();
-        // println!("{:?}", ts.sec as f64);
-        // let angle: f64 = ts.sec as f64 + ts.nsec as f64 / 1000000000.0;
-
-        entities
+        characters
             .iter_mut()
-            .for_each(|entity| entity.transform.rotation.y += 5.0 * 0.16);
-        // rotation.y += 5.0 * 0.16;
-        // println!("{:?}", time);
+            .for_each(|entity| entity.transform.rotation.y += 5.0 * delta_time);
+
+        let entities: Vec<&Entity> = characters.iter().chain(ground.iter()).collect();
 
         render_context.render(&camera, &point_light, &dir_light, &entities);
 
         // Update light position
         if forward && point_light.position.z > -25.0 {
-            point_light.position.z -= 5.0 * 0.016;
+            point_light.position.z -= 5.0 * delta_time;
         } else if point_light.position.z < -25.0 {
             forward = false;
         }
 
-        if !forward && point_light.position.z < 0.0 {
-            point_light.position.z += 5.0 * 0.016;
-        } else if point_light.position.z > 0.0 {
+        if !forward && point_light.position.z < 25.0 {
+            point_light.position.z += 5.0 * delta_time;
+        } else if point_light.position.z > 25.0 {
             forward = true;
         }
 
@@ -261,7 +226,6 @@ fn main() {
 
 fn input(keys: &[bool; 1024], camera: &mut Camera) {
     let camera_speed = 2.0 * 0.16;
-    let temp_cam_front = Vec3::new(camera.forward.x, 0.0, camera.forward.z);
 
     if is_pressed(keys, VirtualKeyCode::A) {
         camera.position = camera.position
@@ -277,12 +241,12 @@ fn input(keys: &[bool; 1024], camera: &mut Camera) {
 
     if is_pressed(keys, VirtualKeyCode::W) {
         camera.position =
-            camera.position + temp_cam_front * Vec3::new(camera_speed, camera_speed, camera_speed);
+            camera.position + camera.forward * Vec3::new(camera_speed, camera_speed, camera_speed);
     }
 
     if is_pressed(keys, VirtualKeyCode::S) {
         camera.position =
-            camera.position - temp_cam_front * Vec3::new(camera_speed, camera_speed, camera_speed);
+            camera.position - camera.forward * Vec3::new(camera_speed, camera_speed, camera_speed);
     }
 
     if is_pressed(keys, VirtualKeyCode::Q) {
