@@ -189,7 +189,6 @@ impl Model {
             let mat_id: usize = mesh.material_id.unwrap();
             let material = materials[mat_id].clone();
 
-            // TODO: implement match
             let mut diffuse = None;
             if material.diffuse_texture.len() > 0 {
                 diffuse = Some(material.diffuse_texture);
