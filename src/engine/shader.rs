@@ -1,6 +1,9 @@
 extern crate math;
 extern crate opengl as gl;
 
+use self::gl::types::*;
+use self::math::mat4::Mat4;
+use self::math::vec3::Vec3;
 use std::error::Error;
 use std::ffi::CString;
 use std::fs::File;
@@ -8,10 +11,6 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::ptr;
 use std::str;
-
-use self::gl::types::*;
-use self::math::mat4::Mat4;
-use self::math::vec3::Vec3;
 
 #[derive(Debug)]
 pub struct ShaderProgram {
@@ -86,7 +85,7 @@ fn load_shader(path: &str, ty: GLenum) -> GLuint {
     let display = path.display();
     let mut shader_file = match File::open(&path) {
         Ok(file) => file,
-        Err(err) => panic!("Coudn't open {}: {}", display, Error::description(&err)),
+        Err(err) => panic!("Coudn't open {}: {}", display, Error::to_string(&err)),
     };
     let mut shader_src = String::new();
     match shader_file.read_to_string(&mut shader_src) {
@@ -94,7 +93,7 @@ fn load_shader(path: &str, ty: GLenum) -> GLuint {
         Err(err) => panic!(
             "Coudn't read_to_string {}: {}",
             display,
-            Error::description(&err)
+            Error::to_string(&err)
         ),
     };
 
@@ -134,6 +133,7 @@ unsafe fn compile_program(src: &str, ty: GLenum) -> GLuint {
                 .expect("ShaderIngoLog not valid for utf8")
         );
     }
+
     shader
 }
 

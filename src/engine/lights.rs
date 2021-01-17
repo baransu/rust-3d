@@ -1,11 +1,10 @@
 extern crate math;
 
+use self::math::mat4::Mat4;
+use self::math::vec3::Vec3;
 use model::Model;
 use shader::ShaderProgram;
 use transform::Transform;
-
-use self::math::mat4::Mat4;
-use self::math::vec3::Vec3;
 
 pub struct DirLight {
     pub direction: Vec3,
@@ -80,9 +79,6 @@ impl PointLight {
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::new(0.25, 0.25, 0.25),
         );
-
-        // self.transform.position = self.position;
-        // matrices
 
         // ligth color
         self.shader.set_uniform_3f("lightColor", self.diffuse);

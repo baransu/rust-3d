@@ -6,9 +6,6 @@ extern crate opengl as gl;
 extern crate rand;
 extern crate time;
 
-use glutin::*;
-
-// local
 use engine::camera::Camera;
 use engine::entity::Entity;
 use engine::lights::{DirLight, PointLight};
@@ -16,7 +13,7 @@ use engine::model::Model;
 use engine::render_context::RenderContext;
 use engine::skybox::Skybox;
 use engine::transform::Transform;
-
+use glutin::*;
 use math::vec3::Vec3;
 
 const WIDTH: f32 = 1280.0;

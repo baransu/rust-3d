@@ -5,18 +5,12 @@ extern crate tobj;
 use self::gl::types::*;
 use self::math::vec2::Vec2;
 use self::math::vec3::Vec3;
-// use self::tobj::*;
 use itertools::Itertools;
-use texture::Texture;
-
 use std::collections::HashMap;
-// use std::error::Error;
-// use std::fs::File;
-// use std::io::prelude::*;
-// use std::io::BufReader;
 use std::mem;
 use std::path::Path;
 use std::ptr;
+use texture::Texture;
 
 #[derive(Eq, Clone, Debug, PartialEq)]
 struct TextureRequest {

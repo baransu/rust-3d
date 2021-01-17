@@ -54,10 +54,8 @@ impl Texture {
 
             gl::GenerateMipmap(gl::TEXTURE_2D);
 
-            let max_anisotropy = 16.0;
-            // gl::GetFloatv(gl::MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_anisotropy);
-
-            // println!("max anisotropy: {:?}", max_anisotropy);
+            let mut max_anisotropy = 16.0;
+            gl::GetFloatv(gl::MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_anisotropy);
 
             let current_anisotropy = if anisotropy > max_anisotropy {
                 max_anisotropy
