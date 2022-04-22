@@ -4,8 +4,6 @@ OpenGL in Rust playground.
 
 ## TODO
 
-- [ ] shadows
-
 ![presentation](https://raw.githubusercontent.com/Baransu/rust-3d/master/presentation.jpg)
 
 ---
